@@ -11,6 +11,18 @@ export enum UserRole {
 
 export type LanguageCode = 'en' | 'hi' | 'mr';
 
+export interface User {
+  id: string;
+  name: string;
+  role: UserRole;
+  school_id: string;
+}
+
+export interface AuthResponse {
+  user: User;
+  school: SchoolConfig;
+}
+
 export interface SchoolConfig {
   school_id: string;
   name: string;

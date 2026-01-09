@@ -1,142 +1,149 @@
 import React, { useState, useEffect } from 'react';
 import LoginScreen from './apps/expo/app/login';
 import SuperAdminOnboarding from './apps/next/pages/super-admin/onboarding.tsx';
-import { SchoolConfig, UserRole, LanguageCode } from './types';
-import { AttendanceModule } from './components/AttendanceModule';
-import { Dashboard } from './components/Dashboard';
+import { SchoolConfig, UserRole, LanguageCode, User, AuthResponse } from './types';
+import { Dashboard } from './components/Dashboard'; // Admin Dashboard
+import { TeacherDashboard } from './packages/app/features/dashboard/TeacherDashboard';
+import { ParentDashboard } from './packages/app/features/dashboard/ParentDashboard';
+import { Sidebar } from './components/Sidebar';
 import { LanguageProvider, useTranslation } from './packages/app/provider/language-context';
 import { useLowDataMode } from './packages/app/hooks/useLowDataMode';
 import { generatePalette } from './packages/app/utils/theme-generator';
 
-// Inner component to access Context hooks
-const MainApp: React.FC<{
+const MainLayout: React.FC<{
+  user: User;
   school: SchoolConfig;
   onLogout: () => void;
-}> = ({ school, onLogout }) => {
+}> = ({ user, school, onLogout }) => {
   const { isLowData, toggleLowData } = useLowDataMode();
   const { language, setLanguage, t } = useTranslation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Set default module based on role
+  const getDefaultModule = () => {
+    switch(user.role) {
+      case UserRole.TEACHER: return 'ATTENDANCE';
+      case UserRole.PARENT: return 'FEES';
+      default: return 'DASHBOARD';
+    }
+  };
+
+  const [activeModule, setActiveModule] = useState(getDefaultModule());
 
   // Dynamic Theme Injection
   useEffect(() => {
     const palette = generatePalette(school.primary_color);
     const root = document.documentElement;
-    
-    // Inject CSS Variables for Tailwind (simulated) or standard CSS
     Object.entries(palette).forEach(([shade, hex]) => {
       root.style.setProperty(`--color-primary-${shade}`, hex);
     });
-    // Set main primary color
     root.style.setProperty('--primary-color', school.primary_color);
-    
   }, [school.primary_color]);
 
   return (
-    <div 
-      className="min-h-screen bg-gray-50 flex flex-col font-sans"
-    >
-      <header 
-        className="text-white p-4 shadow-md flex items-center justify-between transition-colors duration-300"
-        style={{ backgroundColor: school.primary_color }}
-      >
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-800 font-bold overflow-hidden">
-             {/* Hide Image in Low Data Mode */}
-             {!isLowData && school.logo_url ? (
-               <img src={school.logo_url} alt="Logo" className="w-full h-full object-cover" />
-             ) : (
-               school.name[0]
-             )}
+    <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
+      {/* Sidebar Navigation */}
+      <Sidebar 
+        role={user.role} 
+        school={school} 
+        activeModule={activeModule} 
+        setActiveModule={setActiveModule}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Header */}
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 lg:px-8 shadow-sm z-10">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 rounded-md hover:bg-gray-100 text-gray-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            </button>
+            <h2 className="text-xl font-bold text-gray-800 hidden sm:block">
+              {school.name}
+            </h2>
           </div>
-          <h1 className="text-xl font-bold truncate max-w-[200px] sm:max-w-md">{school.name}</h1>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* Language Switcher */}
-          <select 
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as LanguageCode)}
-            className="text-xs bg-white/20 text-white border-0 rounded p-1 cursor-pointer focus:ring-0"
-          >
-            <option value="en" className="text-gray-900">EN</option>
-            <option value="hi" className="text-gray-900">हिंदी</option>
-            <option value="mr" className="text-gray-900">मराठी</option>
-          </select>
 
-          {/* Low Data Toggle */}
-          <button 
-            onClick={toggleLowData}
-            title="Toggle Low Data Mode"
-            className={`p-1.5 rounded ${isLowData ? 'bg-yellow-400 text-black' : 'bg-white/20 text-white'}`}
-          >
-            <span className="text-xs font-bold">{isLowData ? 'Lite' : 'HD'}</span>
-          </button>
+          <div className="flex items-center gap-3">
+             {/* Role Badge */}
+            <span className="hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+              {user.role}
+            </span>
 
-          <button 
-            onClick={onLogout}
-            className="text-sm bg-white/20 px-3 py-1 rounded hover:bg-white/30"
-          >
-            {t('logout')}
-          </button>
-        </div>
-      </header>
-
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 space-y-6">
-        <Dashboard school={school} />
-        
-        {school.features.attendance && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-             <div className="p-4 border-b border-gray-100 bg-gray-50">
-               <h2 className="font-semibold text-gray-800">{t('attendance')} (Offline Ready)</h2>
-             </div>
-             <AttendanceModule school={school} />
+             {/* Low Data Toggle */}
+            <button onClick={toggleLowData} className={`p-1.5 rounded border text-xs font-bold transition-colors ${isLowData ? 'bg-yellow-400 border-yellow-500 text-black' : 'bg-gray-100 text-gray-600'}`}>
+              {isLowData ? 'Lite Mode' : 'HD Mode'}
+            </button>
+            
+            <button onClick={onLogout} className="text-sm text-red-600 hover:text-red-800 font-medium">
+              Logout
+            </button>
           </div>
-        )}
-      </main>
+        </header>
+
+        {/* Dashboard Switcher */}
+        <main className="flex-1 overflow-auto bg-gray-50 relative">
+          {user.role === UserRole.SCHOOL_ADMIN && (
+            <Dashboard school={school} activeModule={activeModule} />
+          )}
+          {user.role === UserRole.TEACHER && (
+            <TeacherDashboard school={school} activeModule={activeModule} />
+          )}
+          {user.role === UserRole.PARENT && (
+            <ParentDashboard school={school} activeModule={activeModule} />
+          )}
+        </main>
+      </div>
     </div>
   );
 };
 
 const App: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentSchool, setCurrentSchool] = useState<SchoolConfig | null>(null);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
-  const handleLogin = (config: SchoolConfig) => {
-    setCurrentSchool(config);
-    setUserRole(UserRole.SCHOOL_ADMIN);
+  const handleLoginSuccess = (data: AuthResponse) => {
+    setCurrentUser(data.user);
+    setCurrentSchool(data.school);
   };
 
-  const handleSuperAdminLogin = () => {
-    setUserRole(UserRole.SUPER_ADMIN);
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentSchool(null);
   };
 
-  if (userRole === UserRole.SUPER_ADMIN) {
-    return (
-      <>
-        <div className="fixed top-4 right-4 z-50">
-           <button onClick={() => setUserRole(null)} className="bg-red-600 text-white px-3 py-1 rounded text-xs">Exit Admin</button>
-        </div>
-        <SuperAdminOnboarding />
-      </>
-    );
-  }
-
-  if (!currentSchool) {
+  // 1. Super Admin View (No School Context needed strictly, but simplified for flow)
+  if (currentUser?.role === UserRole.SUPER_ADMIN) {
     return (
       <div className="relative">
-        <LoginScreen onLoginSuccess={handleLogin} />
         <button 
-          onClick={handleSuperAdminLogin}
-          className="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-full text-xs font-mono shadow-xl opacity-50 hover:opacity-100 transition-opacity"
+          onClick={handleLogout} 
+          className="fixed top-4 right-4 z-50 bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700"
         >
-          Super Admin Login
+          Exit Super Admin
         </button>
+        <SuperAdminOnboarding />
       </div>
     );
   }
 
+  // 2. Login View
+  if (!currentUser || !currentSchool) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // 3. Role-Based App Layout
   return (
     <LanguageProvider>
-      <MainApp school={currentSchool} onLogout={() => setCurrentSchool(null)} />
+      <MainLayout 
+        user={currentUser} 
+        school={currentSchool} 
+        onLogout={handleLogout} 
+      />
     </LanguageProvider>
   );
 };

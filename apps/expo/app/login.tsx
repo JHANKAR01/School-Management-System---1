@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { SchoolConfig } from '../../../../types';
+import { SchoolConfig, User, UserRole, AuthResponse } from '../../../../types';
 
-// Mock DB of Schools (In prod, this is an API call)
+// Mock DB of Schools
 const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
   'demo': {
     school_id: 'sch_123',
@@ -36,11 +36,8 @@ const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
 };
 
 interface Props {
-  onLoginSuccess: (config: SchoolConfig) => void;
+  onLoginSuccess: (data: AuthResponse) => void;
 }
-
-// In Solito/Expo, we would use <View>, <Text>, <TextInput> from 'react-native'
-// or 'react-native-web'. Here we use standard HTML/Tailwind for the web shell preview.
 
 export default function LoginScreen({ onLoginSuccess }: Props) {
   const [username, setUsername] = useState('');
@@ -53,32 +50,67 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
     setLoading(true);
     setError('');
 
-    // Simulate API Delay
     setTimeout(() => {
-      // "Sovereign Loop": Detect School ID from login (simplified here as username prefix or mapping)
-      // Example: 'demo.teacher' -> school 'demo'
-      const schoolPrefix = username.split('.')[0];
+      // 1. Detect School from prefix (e.g., demo.admin -> demo)
+      const parts = username.split('.');
+      const schoolPrefix = parts[0];
+      const roleSuffix = parts[1];
+
       const schoolConfig = MOCK_SCHOOL_DB[schoolPrefix];
 
-      if (schoolConfig) {
-        // Valid School Found - Fetch Branding & Config
-        onLoginSuccess(schoolConfig);
-      } else {
-        setError('Invalid School ID or Credentials');
+      if (!schoolConfig) {
+        setError('School not found. Try "demo.admin", "demo.teacher", or "demo.parent"');
         setLoading(false);
+        return;
       }
-    }, 1000);
+
+      // 2. Infer Role & User Details
+      let userRole = UserRole.STUDENT;
+      let userName = 'Student';
+
+      switch (roleSuffix) {
+        case 'admin':
+          userRole = UserRole.SCHOOL_ADMIN;
+          userName = 'Principal Sharma';
+          break;
+        case 'teacher':
+          userRole = UserRole.TEACHER;
+          userName = 'Radha Miss';
+          break;
+        case 'parent':
+          userRole = UserRole.PARENT;
+          userName = 'Mr. Verma';
+          break;
+        case 'super':
+          userRole = UserRole.SUPER_ADMIN;
+          userName = 'System Root';
+          break;
+        default:
+          setError('Invalid Role. Use .admin, .teacher, or .parent suffix.');
+          setLoading(false);
+          return;
+      }
+
+      const user: User = {
+        id: `usr_${Date.now()}`,
+        name: userName,
+        role: userRole,
+        school_id: schoolConfig.school_id
+      };
+
+      onLoginSuccess({ user, school: schoolConfig });
+    }, 800);
   };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-xl">
+      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-xl border border-gray-200">
         <div className="text-center">
           <h2 className="text-3xl font-black text-gray-900 tracking-tight">
             PROJECT <span className="text-indigo-600">SOVEREIGN</span>
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Ownership First. Offline Ready.
+            Secure Role-Based Login
           </p>
         </div>
 
@@ -92,7 +124,7 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
                 type="text"
                 required
                 className="relative block w-full rounded-t-md border-0 py-3 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="Username (try 'demo.admin')"
+                placeholder="demo.admin / demo.teacher / demo.parent"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -105,7 +137,7 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
                 type="password"
                 required
                 className="relative block w-full rounded-b-md border-0 py-3 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="Password"
+                placeholder="Any password works"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -113,7 +145,7 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
           </div>
 
           {error && (
-            <div className="text-red-500 text-sm text-center font-medium bg-red-50 p-2 rounded">
+            <div className="text-red-600 text-xs font-bold text-center bg-red-50 p-2 rounded border border-red-200">
               {error}
             </div>
           )}
@@ -124,13 +156,22 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
               disabled={loading}
               className="group relative flex w-full justify-center rounded-md bg-gray-900 px-3 py-3 text-sm font-semibold text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-70 transition-all"
             >
-              {loading ? 'Authenticating...' : 'Sign In securely'}
+              {loading ? 'Verifying Credentials...' : 'Sign In'}
             </button>
           </div>
         </form>
         
-        <div className="text-center text-xs text-gray-400 mt-4">
-          Tier 3 Ready • Low Data Mode Enabled
+        <div className="text-center space-y-2">
+           <div className="text-[10px] text-gray-400">
+             Quick Test Credentials:
+           </div>
+           <div className="flex justify-center gap-2 text-xs font-mono text-indigo-600">
+             <button onClick={() => setUsername('demo.admin')} className="hover:underline">Admin</button>
+             <span>|</span>
+             <button onClick={() => setUsername('demo.teacher')} className="hover:underline">Teacher</button>
+             <span>|</span>
+             <button onClick={() => setUsername('demo.parent')} className="hover:underline">Parent</button>
+           </div>
         </div>
       </div>
     </div>
