@@ -1,11 +1,18 @@
-
 import { Hono } from 'hono';
 import { getTenantDB } from '../db';
 import { authMiddleware, requireRole, getRLSContext } from '../middleware/auth';
 import { UserRole } from '../../../../types';
 import { AuditLogger } from '../utils/audit-logger';
 
-const staffRouter = new Hono();
+type Variables = {
+  user: {
+    id: string;
+    role: UserRole;
+    school_id: string;
+  };
+};
+
+const staffRouter = new Hono<{ Variables: Variables }>();
 
 staffRouter.use('*', authMiddleware);
 staffRouter.use('*', requireRole([UserRole.SCHOOL_ADMIN, UserRole.SUPER_ADMIN]));
@@ -33,7 +40,7 @@ staffRouter.post('/', async (c) => {
   const { name, role, department, username } = await c.req.json();
 
   // Create User Transactionally
-  const newUser = await db.user.create({
+  const newUser: any = await db.user.create({
     data: {
       school_id: user.school_id,
       full_name: name,

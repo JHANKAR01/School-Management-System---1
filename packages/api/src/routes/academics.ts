@@ -1,11 +1,18 @@
-
 import { Hono } from 'hono';
 import { getTenantDB } from '../db';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { UserRole } from '../../../../types';
 import { generatePDFMarksheet } from '../services/pdf-service';
 
-const academicsRouter = new Hono();
+type Variables = {
+  user: {
+    id: string;
+    role: UserRole;
+    school_id: string;
+  };
+};
+
+const academicsRouter = new Hono<{ Variables: Variables }>();
 academicsRouter.use('*', authMiddleware);
 
 // --- TEACHER: Marks Entry ---

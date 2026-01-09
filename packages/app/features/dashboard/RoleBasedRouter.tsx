@@ -20,6 +20,8 @@ import { ReceptionDashboard } from '../admin/ReceptionDashboard';
 import { InventoryDashboard } from '../inventory/InventoryDashboard';
 import { InfirmaryDashboard } from '../health/InfirmaryDashboard';
 import { AdmissionsDashboard } from '../admissions/AdmissionsDashboard';
+import { CounselorDashboard } from '../health/CounselorDashboard'; // New
+import { ITAdminDashboard } from '../admin/ITAdminDashboard'; // New
 
 // Facilities
 import { BusFleet } from '../transport/BusFleet';
@@ -56,11 +58,13 @@ export const RoleBasedRouter: React.FC<Props> = ({ role, school, activeModule })
     case UserRole.ADMISSIONS_OFFICER: return <AdmissionsDashboard />;
     case UserRole.INVENTORY_MANAGER: return <InventoryDashboard />;
     case UserRole.NURSE: return <InfirmaryDashboard />;
+    case UserRole.COUNSELOR: return <CounselorDashboard />;
+    case UserRole.IT_ADMIN: return <ITAdminDashboard />;
     
     // Facilities
-    case UserRole.FLEET_MANAGER: return <div className="p-6"><BusFleet /></div>;
-    case UserRole.LIBRARIAN: return <div className="p-6"><LibraryManagement /></div>;
-    case UserRole.WARDEN: return <div className="p-6"><HostelWarden /></div>;
+    case UserRole.FLEET_MANAGER: return <BusFleet />;
+    case UserRole.LIBRARIAN: return <LibraryManagement />;
+    case UserRole.WARDEN: return <HostelWarden />;
 
     // End Users
     case UserRole.PARENT: 

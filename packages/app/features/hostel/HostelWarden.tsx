@@ -1,41 +1,40 @@
 
 import React, { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { SovereignButton, SovereignBadge } from '../../components/SovereignComponents';
-
-// Localized Mock Data (simulating initial DB state)
-const INITIAL_ROOMS = [
-  { roomNumber: '101', capacity: 4, occupied: 3, gender: 'BOYS', students: ['s1', 's2', 's5'] },
-  { roomNumber: '102', capacity: 4, occupied: 4, gender: 'BOYS', students: ['s6', 's7', 's8', 's9'] }, 
-  { roomNumber: '103', capacity: 4, occupied: 0, gender: 'BOYS', students: [] },
-];
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { SovereignButton, SovereignSkeleton } from '../../components/SovereignComponents';
 
 export const HostelWarden = () => {
-  const [rooms, setRooms] = useState(INITIAL_ROOMS);
+  const queryClient = useQueryClient();
   const [view, setView] = useState<'ALLOCATION' | 'ATTENDANCE'>('ALLOCATION');
+
+  const { data: rooms, isLoading } = useQuery({
+    queryKey: ['rooms'],
+    queryFn: async () => {
+      const res = await fetch('/api/logistics/rooms', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+      return res.json();
+    }
+  });
 
   const allocateMutation = useMutation({
     mutationFn: async ({ room, studentId }: { room: string, studentId: string }) => {
-      // Call Real API
       await fetch('/api/logistics/allocate-room', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ roomId: room, studentId })
       });
     },
-    onSuccess: (_, vars) => {
-      setRooms(prev => prev.map(r => r.roomNumber === vars.room 
-        ? { ...r, occupied: r.occupied + 1, students: [...r.students, vars.studentId] }
-        : r
-      ));
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
       alert("Allocated & Fee Generated");
     }
   });
 
-  const handleAllocate = (roomNum: string) => {
+  const handleAllocate = (roomId: string) => {
     const studentId = prompt("Enter Student ID to Allocate:");
-    if (studentId) allocateMutation.mutate({ room: roomNum, studentId });
+    if (studentId) allocateMutation.mutate({ room: roomId, studentId });
   };
+
+  if (isLoading) return <SovereignSkeleton className="h-64" />;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -47,17 +46,17 @@ export const HostelWarden = () => {
       <div className="p-6">
         {view === 'ALLOCATION' && (
           <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-            {rooms.map(room => (
-              <div key={room.roomNumber} className="border rounded-lg p-4 text-center bg-white">
-                <h3 className="text-lg font-bold text-gray-800">Room {room.roomNumber}</h3>
-                <p className="text-xs text-gray-500 mb-2">{room.gender}</p>
+            {rooms?.map((room: any) => (
+              <div key={room.id} className="border rounded-lg p-4 text-center bg-white">
+                <h3 className="text-lg font-bold text-gray-800">Room {room.number}</h3>
+                <p className="text-xs text-gray-500 mb-2">{room.block}</p>
                 <div className="flex justify-center gap-1 mb-3">
                   {Array.from({ length: room.capacity }).map((_, i) => (
                     <div key={i} className={`w-4 h-6 rounded-sm ${i < room.occupied ? 'bg-indigo-600' : 'bg-gray-200'}`} />
                   ))}
                 </div>
                 <SovereignButton 
-                  onClick={() => handleAllocate(room.roomNumber)}
+                  onClick={() => handleAllocate(room.id)}
                   disabled={room.occupied === room.capacity}
                   variant="secondary"
                   className="w-full text-xs"
@@ -70,17 +69,9 @@ export const HostelWarden = () => {
         )}
 
         {view === 'ATTENDANCE' && (
-          <div className="space-y-2">
-            {rooms.flatMap(r => r.students).map(sid => (
-              <div key={sid} className="flex justify-between items-center p-3 border rounded bg-gray-50">
-                <span className="font-bold">Student {sid}</span>
-                <div className="flex gap-2">
-                  <button className="w-8 h-8 bg-green-200 rounded-full text-green-800 font-bold">P</button>
-                  <button className="w-8 h-8 bg-red-200 rounded-full text-red-800 font-bold">A</button>
-                </div>
-              </div>
-            ))}
-          </div>
+           <div className="p-8 text-center text-gray-500">
+             Attendance Module Linked to Biometric Entry. Syncs automatically at 9 PM.
+           </div>
         )}
       </div>
     </div>

@@ -1,10 +1,17 @@
-
 import { Hono } from 'hono';
 import { getTenantDB } from '../db';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { UserRole } from '../../../../types';
 
-const admissionsRouter = new Hono();
+type Variables = {
+  user: {
+    id: string;
+    role: UserRole;
+    school_id: string;
+  };
+};
+
+const admissionsRouter = new Hono<{ Variables: Variables }>();
 admissionsRouter.use('*', authMiddleware);
 
 admissionsRouter.get('/', requireRole([UserRole.ADMISSIONS_OFFICER]), async (c) => {

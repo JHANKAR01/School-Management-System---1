@@ -3,7 +3,15 @@ import { sign } from 'hono/jwt';
 import { authMiddleware } from '../middleware/auth';
 import { UserRole } from '../../../../types';
 
-const jitsiRouter = new Hono();
+type Variables = {
+  user: {
+    id: string;
+    role: UserRole;
+    school_id: string;
+  };
+};
+
+const jitsiRouter = new Hono<{ Variables: Variables }>();
 
 // Private Key for Jitsi (In prod, use Vault/Env)
 const JITSI_APP_ID = process.env.JITSI_APP_ID || "my_sovereign_app";
