@@ -8,7 +8,7 @@ operationsRouter.use('*', authMiddleware);
 
 // --- SECURITY HEAD: Gate Logs ---
 operationsRouter.get('/gate-logs', requireRole([UserRole.SECURITY_HEAD, UserRole.PRINCIPAL]), async (c) => {
-  // Mock DB fetch
+  // Mock DB fetch with Localized Data
   return c.json([
     { id: 1, type: 'VISITOR', name: 'Ramesh Courier', purpose: 'Amazon Delivery', time: '10:30 AM', status: 'EXITED' },
     { id: 2, type: 'PARENT', name: 'Mrs. Sharma', purpose: 'Fee Payment', time: '11:15 AM', status: 'INSIDE' },
