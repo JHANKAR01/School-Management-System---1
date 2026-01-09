@@ -1,18 +1,50 @@
 import React, { useState } from 'react';
 import LoginScreen from './apps/expo/app/login';
-import { SchoolConfig } from './types';
+import SuperAdminOnboarding from './apps/next/pages/super-admin/onboarding.tsx';
+import { SchoolConfig, UserRole } from './types';
 import { AttendanceModule } from './components/AttendanceModule';
 import { Dashboard } from './components/Dashboard';
 
 const App: React.FC = () => {
   const [currentSchool, setCurrentSchool] = useState<SchoolConfig | null>(null);
+  // Simulated Auth State
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
 
-  // In a real Solito app, this would be handled by Next.js/Expo Router.
-  // Here we simulate a simple view switch for the Sovereign Shell.
-  
+  const handleLogin = (config: SchoolConfig) => {
+    // Hacky simulation for demo: if username contained 'admin' in LoginScreen, it would be SUPER_ADMIN
+    // For now, we'll assume standard school admin unless specified.
+    setCurrentSchool(config);
+    setUserRole(UserRole.SCHOOL_ADMIN);
+  };
+
+  const handleSuperAdminLogin = () => {
+    setUserRole(UserRole.SUPER_ADMIN);
+  };
+
+  // ROUTING LOGIC
+  if (userRole === UserRole.SUPER_ADMIN) {
+    return (
+      <>
+        <div className="fixed top-4 right-4 z-50">
+           <button onClick={() => setUserRole(null)} className="bg-red-600 text-white px-3 py-1 rounded text-xs">Exit Admin</button>
+        </div>
+        <SuperAdminOnboarding />
+      </>
+    );
+  }
+
   if (!currentSchool) {
     return (
-      <LoginScreen onLoginSuccess={(config) => setCurrentSchool(config)} />
+      <div className="relative">
+        <LoginScreen onLoginSuccess={handleLogin} />
+        {/* Secret Backdoor for Super Admin Demo */}
+        <button 
+          onClick={handleSuperAdminLogin}
+          className="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-full text-xs font-mono shadow-xl opacity-50 hover:opacity-100 transition-opacity"
+        >
+          Super Admin Login
+        </button>
+      </div>
     );
   }
 
@@ -21,7 +53,6 @@ const App: React.FC = () => {
       className="min-h-screen bg-gray-50 flex flex-col"
       style={{ '--primary-color': currentSchool.primary_color } as React.CSSProperties}
     >
-      {/* Dynamic Header based on School Branding */}
       <header 
         className="text-white p-4 shadow-md flex items-center justify-between"
         style={{ backgroundColor: currentSchool.primary_color }}
@@ -50,7 +81,7 @@ const App: React.FC = () => {
         {currentSchool.features.attendance && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
              <div className="p-4 border-b border-gray-100 bg-gray-50">
-               <h2 className="font-semibold text-gray-800">Attendance Module</h2>
+               <h2 className="font-semibold text-gray-800">Attendance Module (Offline Ready)</h2>
              </div>
              <AttendanceModule school={currentSchool} />
           </div>
