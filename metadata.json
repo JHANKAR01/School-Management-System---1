@@ -1,0 +1,7 @@
+{
+  "name": "School Management System 1 ",
+  "description": "A Sovereign, Offline-First School ERP designed for the Indian K-12 market. Features multi-tenancy, UPI payments, and geofenced attendance.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
