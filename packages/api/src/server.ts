@@ -9,6 +9,7 @@ import { financeRouter } from './routes/finance';
 import { healthRouter } from './routes/health';
 import { admissionsRouter } from './routes/admissions';
 import { jitsiRouter } from './routes/jitsi';
+import { operationsRouter } from './routes/operations'; // New
 
 const app = new Hono();
 
@@ -19,7 +20,7 @@ app.use('*', cors());
 app.get('/health', (c) => c.json({ status: 'OK', uptime: (process as any).uptime ? (process as any).uptime() : 0 }));
 
 // Mount Sub-Routers
-app.route('/api/auth', authMiddleware as any); // Auth is usually handled separately or inside middleware
+app.route('/api/auth', authMiddleware as any); 
 app.route('/api/staff', staffRouter);
 app.route('/api/academics', academicsRouter);
 app.route('/api/logistics', logisticsRouter);
@@ -27,5 +28,6 @@ app.route('/api/finance', financeRouter);
 app.route('/api/health', healthRouter);
 app.route('/api/admissions', admissionsRouter);
 app.route('/api/jitsi', jitsiRouter);
+app.route('/api/operations', operationsRouter); // Security, Estate, Reception
 
 export default app;

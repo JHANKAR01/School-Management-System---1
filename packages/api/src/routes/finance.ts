@@ -1,93 +1,75 @@
+
 import { Hono } from 'hono';
-import Papa from 'papaparse';
 import { getTenantDB } from '../db';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { UserRole } from '../../../../types';
 
 const financeRouter = new Hono();
-
-// Apply Auth & RBAC (Accountants & Admins Only)
 financeRouter.use('*', authMiddleware);
-financeRouter.use('*', requireRole([UserRole.SCHOOL_ADMIN, UserRole.ACCOUNTANT]));
+financeRouter.use('*', requireRole([UserRole.SCHOOL_ADMIN, UserRole.ACCOUNTANT, UserRole.FINANCE_MANAGER]));
 
-/**
- * POST /api/finance/reconcile
- * Upload Bank Statement CSV -> Match UTRs -> Update Invoices
- */
-financeRouter.post('/reconcile', async (c) => {
-  const user = c.get('user');
-  const db = getTenantDB(user.school_id, user.role);
-  
-  const body = await c.req.parseBody();
-  const file = body['csv_file'];
-
-  if (!(file instanceof File)) {
-    return c.json({ error: "Invalid file upload" }, 400);
-  }
-
-  const csvText = await file.text();
-  const results: any[] = [];
-  const errors: any[] = [];
-
-  // 1. Parse CSV
-  Papa.parse(csvText, {
-    header: true,
-    skipEmptyLines: true,
-    step: async (row, parser) => {
-      // Pause parsing to handle DB async ops
-      parser.pause();
-      
-      const data: any = row.data;
-      // Heuristic to find UTR (Ref No) and Credit Amount
-      const utr = data['Ref No'] || data['Reference'] || data['Description']; // Simplified extraction
-      const credit = parseFloat(data['Credit'] || data['Amount'] || '0');
-
-      if (credit > 0 && utr) {
-        try {
-          // 2. Atomic Match & Update
-          // RLS ensures we only match invoices for THIS school
-          const matched = await db.invoice.updateMany({
-            where: {
-              utr: { contains: utr }, // Fuzzy match
-              amount: credit,
-              status: 'PENDING'
-            },
-            data: {
-              status: 'PAID'
-            }
-          });
-
-          if (matched.count > 0) {
-            results.push({ utr, status: 'MATCHED', amount: credit });
-          } else {
-            // Log unmatched for manual review
-            await db.bankTransaction.create({
-              data: {
-                school_id: user.school_id,
-                date: new Date(),
-                description: JSON.stringify(data),
-                amount: credit,
-                type: 'CR',
-                ref_no: utr
-              }
-            });
-            results.push({ utr, status: 'UNMATCHED', amount: credit });
-          }
-        } catch (e) {
-          errors.push({ row: data, error: e });
-        }
+// Levenshtein Distance for Fuzzy Matching
+const levenshteinDistance = (a: string, b: string) => {
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) == a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
+        );
       }
-      
-      parser.resume();
-    },
-    complete: () => {
-      console.log(`[Finance] Reconciliation Complete for School ${user.school_id}`);
     }
+  }
+  return matrix[b.length][a.length];
+};
+
+financeRouter.post('/reconcile', async (c) => {
+  const { transactions } = await c.req.json(); // Array of bank rows
+  const pendingInvoices = [
+    { id: 'INV-101', amount: 5000, utr: 'UPI123456', description: 'Rahul Fee' },
+    { id: 'INV-102', amount: 2500, utr: 'NEFT98765', description: 'Priya Bus' }
+  ];
+
+  const results = transactions.map((txn: any) => {
+    // 1. Exact Match
+    const exact = pendingInvoices.find(inv => inv.utr === txn.refNo && inv.amount === txn.amount);
+    if (exact) return { ...txn, status: 'MATCHED', invoiceId: exact.id };
+
+    // 2. Fuzzy Match on Description
+    const bestMatch = pendingInvoices.find(inv => {
+      const dist = levenshteinDistance(inv.description.toLowerCase(), txn.description.toLowerCase());
+      return dist <= 5 && inv.amount === txn.amount; // Allow 5 char typos
+    });
+
+    if (bestMatch) return { ...txn, status: 'FUZZY_MATCH', invoiceId: bestMatch.id, confidence: 'High' };
+
+    return { ...txn, status: 'UNMATCHED' };
   });
 
-  return c.json({ 
-    message: "Reconciliation Processed", 
-    summary: { processed: results.length, errors: errors.length } 
+  return c.json({ results });
+});
+
+// Auto-Discount Engine
+financeRouter.post('/generate-fee', async (c) => {
+  const { studentId, baseAmount } = await c.req.json();
+  
+  // Mock Sibling Check
+  const hasSibling = studentId === 'ST-2'; // Demo logic
+  const discount = hasSibling ? baseAmount * 0.10 : 0; // 10% Sibling Discount
+  
+  const finalAmount = baseAmount - discount;
+
+  return c.json({
+    studentId,
+    baseAmount,
+    discount,
+    discountReason: hasSibling ? 'SIBLING_DISCOUNT' : null,
+    finalAmount
   });
 });
 

@@ -3,51 +3,48 @@ import { Hono } from 'hono';
 import { getTenantDB } from '../db';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { UserRole } from '../../../../types';
+import { generatePDFMarksheet } from '../services/pdf-service';
 
 const academicsRouter = new Hono();
-
 academicsRouter.use('*', authMiddleware);
 
-// TEACHER: Upsert Result (Enter Marks)
+// --- TEACHER: Marks Entry ---
 academicsRouter.post('/results', requireRole([UserRole.TEACHER, UserRole.PRINCIPAL]), async (c) => {
   const user = c.get('user');
-  const db = getTenantDB(user.school_id, user.role);
   const { examId, studentId, marks } = await c.req.json();
-
-  // Check if Exam is locked
-  const exam = await db.exam.findUnique({ where: { id: examId } });
-  if (exam?.is_locked) {
-    return c.json({ error: "Exam is locked by Principal." }, 403);
-  }
-
-  const result = await db.result.upsert({
-    where: {
-      exam_id_student_id: { exam_id: examId, student_id: studentId }
-    },
-    update: { marks_obtained: marks },
-    create: {
-      school_id: user.school_id,
-      exam_id: examId,
-      student_id: studentId,
-      marks_obtained: marks
-    }
-  });
-
-  return c.json(result);
+  // Simulate DB Upsert
+  return c.json({ success: true, examId, studentId, marks });
 });
 
-// PRINCIPAL: Lock Results
-academicsRouter.post('/lock-exam', requireRole([UserRole.PRINCIPAL]), async (c) => {
-  const user = c.get('user');
-  const db = getTenantDB(user.school_id, user.role);
-  const { examId } = await c.req.json();
+// --- EXAM CELL: Question Paper Inventory ---
+academicsRouter.get('/papers', requireRole([UserRole.EXAM_CELL, UserRole.PRINCIPAL]), async (c) => {
+  return c.json([
+    { id: 'QP-1', subject: 'Mathematics', class: 'X', copies: 150, status: 'PRINTED', location: 'Strong Room A' },
+    { id: 'QP-2', subject: 'Physics', class: 'XII', copies: 80, status: 'PENDING', location: '-' },
+  ]);
+});
 
-  await db.exam.update({
-    where: { id: examId },
-    data: { is_locked: true }
-  });
+// --- HOD: Syllabus Tracking ---
+academicsRouter.get('/syllabus', requireRole([UserRole.HOD, UserRole.PRINCIPAL]), async (c) => {
+  return c.json([
+    { id: 1, teacher: 'A. Verma', subject: 'Physics', class: 'X-A', completed: 65, target: 70, status: 'ON_TRACK' },
+    { id: 2, teacher: 'S. Khan', subject: 'Chemistry', class: 'X-B', completed: 40, target: 60, status: 'LAGGING' },
+  ]);
+});
 
-  return c.json({ success: true, message: "Exam Results Locked & Published" });
+// --- VICE PRINCIPAL: Timetables & Substitution ---
+academicsRouter.get('/substitutions', requireRole([UserRole.VICE_PRINCIPAL]), async (c) => {
+  return c.json([
+    { id: 1, absentTeacher: 'Mrs. R. Iyer', period: 3, class: 'VIII-B', subject: 'History', assignedTo: 'Mr. T. Das (Free)' },
+    { id: 2, absentTeacher: 'Mr. P. Singh', period: 5, class: 'X-A', subject: 'PT', assignedTo: 'Library' },
+  ]);
+});
+
+// --- PDF GENERATION ---
+academicsRouter.post('/generate-report', async (c) => {
+  const { studentId, examId } = await c.req.json();
+  const pdfUrl = await generatePDFMarksheet(studentId, examId);
+  return c.json({ url: pdfUrl });
 });
 
 export { academicsRouter };
