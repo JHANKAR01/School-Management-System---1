@@ -1,41 +1,77 @@
+import { Context, Next } from 'hono';
+import { verify } from 'hono/jwt';
 import { UserRole } from '../../../../types';
 
-// Mock Request/Response types for the example
-interface MockRequest {
-  user?: {
-    id: string;
-    role: UserRole;
-    school_id?: string;
-  };
-  headers: Record<string, string>;
-}
+// Extend Hono Context via Generics or simply cast usage below.
+// Removed module augmentation to prevent resolution errors.
 
-export function requireSuperAdmin(req: MockRequest) {
-  if (!req.user) {
-    throw new Error("Unauthorized: No user found");
-  }
+const JWT_SECRET = process.env.JWT_SECRET || 'sovereign_secret_key_123';
 
-  if (req.user.role !== UserRole.SUPER_ADMIN) {
-    throw new Error("Forbidden: Access restricted to Sovereign Super Admins");
-  }
-
-  // Log audit trail
-  console.log(`[AUDIT] Super Admin ${req.user.id} accessed protected route.`);
-  return true;
-}
-
-export function getRLSContext(req: MockRequest) {
-  // In a real Postgres adapter, this would set `current_setting('app.current_school_id')`
-  if (req.user?.role === UserRole.SUPER_ADMIN) {
-    return { bypassRLS: true };
-  }
+/**
+ * JWT Authentication Middleware
+ * Validates token and extracts user context.
+ */
+export const authMiddleware = async (c: Context, next: Next) => {
+  const authHeader = c.req.header('Authorization');
   
-  if (!req.user?.school_id) {
-    throw new Error("RLS Error: User has no assigned school");
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return c.json({ error: 'Unauthorized: Missing Token' }, 401);
   }
 
-  return { 
-    school_id: req.user.school_id,
-    bypassRLS: false 
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const payload = await verify(token, JWT_SECRET);
+    
+    // Inject into Hono Context
+    c.set('user', {
+      id: payload.sub as string,
+      role: payload.role as UserRole,
+      school_id: payload.school_id as string
+    });
+
+    // Back-fill to request object for compatibility with legacy consumers (like logistics.ts)
+    (c.req as any).user = {
+      id: payload.sub as string,
+      role: payload.role as UserRole,
+      school_id: payload.school_id as string
+    };
+
+    await next();
+  } catch (e) {
+    return c.json({ error: 'Unauthorized: Invalid Token' }, 401);
+  }
+};
+
+/**
+ * Role-Based Access Control (RBAC) Guard
+ * Higher-order function to block unauthorized roles.
+ */
+export const requireRole = (allowedRoles: UserRole[]) => {
+  return async (c: Context, next: Next) => {
+    const user = c.get('user') as any;
+    
+    if (!user || !allowedRoles.includes(user.role)) {
+      // Security: Audit this failure
+      console.warn(`[SECURITY] RBAC Denial for User ${user?.id} requesting ${c.req.path}`);
+      return c.json({ error: 'Forbidden: Insufficient Permissions' }, 403);
+    }
+    
+    await next();
   };
-}
+};
+
+/**
+ * Get RLS Context
+ * Extracts school_id from the authenticated request to enforce tenant isolation.
+ */
+export const getRLSContext = (req: any) => {
+  // Support both direct object (mock) and Request object
+  const user = req.user || (req.get && typeof req.get === 'function' ? req.get('user') : null);
+
+  if (!user || !user.school_id) {
+    throw new Error('RLS Violation: Missing School Context');
+  }
+
+  return { school_id: user.school_id };
+};

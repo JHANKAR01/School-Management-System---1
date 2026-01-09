@@ -1,62 +1,24 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLowDataMode } from '../../hooks/useLowDataMode';
-// NOTE: In a real Expo Native app, you would import 'expo-sqlite'
-// import * as SQLite from 'expo-sqlite';
 
-// --- MOCK SQLITE ADAPTER FOR WEB PREVIEW ---
-const mockSqlite = {
-  execSync: (sql: string) => console.log('[SQLite Init]', sql),
-  runSync: (sql: string, params?: any[]) => {
-    if (sql.includes('INSERT')) {
-      const queue = JSON.parse(localStorage.getItem('sovereign_offline_db') || '[]');
-      queue.push(params);
-      localStorage.setItem('sovereign_offline_db', JSON.stringify(queue));
-    }
-    if (sql.includes('DELETE')) {
-      localStorage.removeItem('sovereign_offline_db');
-    }
+// --- OFFLINE STORE ADAPTER (Conceptual Drizzle/SQLite Interface) ---
+// In production, this file imports 'expo-sqlite' and a Drizzle Schema
+const offlineStore = {
+  queue: [] as any[],
+  
+  async push(record: any) {
+    // INSERT INTO attendance_queue VALUES ...
+    console.log('[SQLite] Saving offline record:', record);
+    this.queue.push(record);
+    localStorage.setItem('sovereign_queue', JSON.stringify(this.queue));
   },
-  getAllSync: (sql: string) => {
-    const queue = JSON.parse(localStorage.getItem('sovereign_offline_db') || '[]');
-    return queue.map((row: any[]) => ({
-      studentId: row[0],
-      status: row[1],
-      date: row[2],
-      schoolId: row[3],
-      timestamp: row[4]
-    }));
-  }
-};
-
-const db = mockSqlite; 
-
-const initDB = () => {
-  db.execSync(`
-    CREATE TABLE IF NOT EXISTS offline_attendance (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      studentId TEXT,
-      status TEXT,
-      date TEXT,
-      schoolId TEXT,
-      timestamp INTEGER
-    );
-  `);
-};
-
-initDB();
-
-const localDB = {
-  save: (record: any) => {
-    db.runSync(
-      'INSERT INTO offline_attendance (studentId, status, date, schoolId, timestamp) VALUES (?, ?, ?, ?, ?)',
-      [record.studentId, record.status, record.date, record.schoolId, Date.now()]
-    );
-  },
-  getQueue: () => {
-    return db.getAllSync('SELECT * FROM offline_attendance');
-  },
-  clearQueue: () => {
-    db.runSync('DELETE FROM offline_attendance');
+  
+  async popAll() {
+    // SELECT * FROM attendance_queue
+    const q = JSON.parse(localStorage.getItem('sovereign_queue') || '[]');
+    this.queue = [];
+    localStorage.setItem('sovereign_queue', '[]');
+    return q;
   }
 };
 
@@ -67,58 +29,70 @@ export const useAttendance = (schoolId: string) => {
   const mutation = useMutation({
     mutationFn: async (vars: { studentId: string; status: 'PRESENT' | 'ABSENT'; date: string }) => {
       try {
-        // In Low Data Mode, we aggressively prefer offline queueing to save bandwidth overhead per request
-        // We only sync when the user explicitly hits "Force Sync" or batch triggers
-        if (isLowData) {
-            console.log("[Sovereign Low Data] Queuing attendance locally to batch later.");
-            throw new Error("Low Data Mode: Force Offline");
+        // 1. Check connectivity or user preference
+        if (isLowData || !navigator.onLine) {
+           throw new Error("FORCE_OFFLINE");
         }
 
-        if (Math.random() > 0.5) throw new Error("Simulated Offline Mode");
-
+        // 2. Attempt Real API Call
+        // Note: The API validates token & checks RLS
         const response = await fetch('/api/attendance', { 
             method: 'POST', 
-            body: JSON.stringify({ ...vars, schoolId }) 
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}` 
+            },
+            body: JSON.stringify({ ...vars }) 
         });
-        if (!response.ok) throw new Error("Offline");
+
+        if (!response.ok) throw new Error("API_ERROR");
         return await response.json();
+
       } catch (error) {
-        localDB.save({ ...vars, schoolId });
+        // 3. Fallback to SQLite
+        await offlineStore.push({ ...vars, schoolId, timestamp: Date.now() });
         return { success: true, offline: true };
       }
     },
     onMutate: async (newAttendance) => {
+      // Optimistic Update
       await queryClient.cancelQueries({ queryKey: ['attendance', schoolId] });
-      const previousAttendance = queryClient.getQueryData(['attendance', schoolId]);
+      const previous = queryClient.getQueryData(['attendance', schoolId]);
 
-      // Optimistic UI Update
       queryClient.setQueryData(['attendance', schoolId], (old: any[] | undefined) => {
         if (!old) return [];
-        return old.map(record => 
-          record.id === newAttendance.studentId 
-            ? { ...record, status: newAttendance.status, synced: false }
-            : record
+        return old.map(r => r.id === newAttendance.studentId 
+          ? { ...r, status: newAttendance.status, synced: false } 
+          : r
         );
       });
 
-      return { previousAttendance };
+      return { previous };
     }
   });
 
   const syncOfflineQueue = async () => {
-    const queue = localDB.getQueue();
-    if (queue.length === 0) return;
-    
-    if (isLowData) {
-        console.log(`[Sovereign Batch Sync] Compressing ${queue.length} records into single payload...`);
-        // In prod: await fetch('/api/attendance/batch', { body: JSON.stringify({ records: queue }) })
-    } else {
-        console.log(`[Sovereign Sync] Pushing ${queue.length} records individually.`);
-    }
+    const records = await offlineStore.popAll();
+    if (records.length === 0) return;
 
-    localDB.clearQueue();
+    console.log(`[Sync] Uploading ${records.length} records to Cloud...`);
+    
+    // Batch Upload to Hono Endpoint
+    await fetch('/api/attendance/bulk', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}` 
+      },
+      body: JSON.stringify({ records })
+    });
+    
     await queryClient.invalidateQueries({ queryKey: ['attendance', schoolId] });
   };
 
-  return { markAttendance: mutation.mutate, isOffline: mutation.data?.offline, syncOfflineQueue };
+  return { 
+    markAttendance: mutation.mutate, 
+    isOffline: mutation.data?.offline, 
+    syncOfflineQueue 
+  };
 };
