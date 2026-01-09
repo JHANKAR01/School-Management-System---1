@@ -60,7 +60,6 @@ export const DUMMY_BOOKS: Book[] = [
   { isbn: '978-08', title: 'Train to Pakistan', author: 'Khushwant Singh', status: 'AVAILABLE' },
   { isbn: '978-09', title: 'God of Small Things', author: 'Arundhati Roy', status: 'AVAILABLE' },
   { isbn: '978-10', title: 'White Tiger', author: 'Aravind Adiga', status: 'ISSUED', issuedTo: 'std_18' },
-  // ... (Assume 20 more for brevity)
 ];
 
 // --- 4. BUSES ---
@@ -85,7 +84,6 @@ export const DUMMY_HOSTEL: HostelRoom[] = [
   { roomNumber: '201', capacity: 4, occupied: 2, gender: 'GIRLS', students: ['std_2', 'std_4'] },
   { roomNumber: '202', capacity: 4, occupied: 4, gender: 'GIRLS', students: ['std_6', 'std_8', 'std_10', 'std_12'] },
   { roomNumber: '203', capacity: 2, occupied: 0, gender: 'GIRLS', students: [] },
-  // ...
 ];
 
 // --- 6. INVOICES & TRANSACTIONS ---
@@ -97,6 +95,67 @@ export const DUMMY_INVOICES: Invoice[] = [
   { id: 'INV-005', studentId: 'std_5', amount: 5000, description: 'Term 1 Fees', dueDate: '2024-04-10', status: 'PAID', utr: 'UPI987654321098' },
 ];
 
+// --- 7. HOMEWORK ---
+export const DUMMY_HOMEWORK = [
+  { id: 'hw_1', class: '10-A', subject: 'Physics', title: 'Newton Laws', dueDate: '2023-10-28', status: 'PENDING' },
+  { id: 'hw_2', class: '10-A', subject: 'Math', title: 'Quadratic Equations', dueDate: '2023-10-29', status: 'SUBMITTED' },
+  { id: 'hw_3', class: '9-B', subject: 'History', title: 'Mughal Empire', dueDate: '2023-10-30', status: 'PENDING' },
+  { id: 'hw_4', class: '8-A', subject: 'English', title: 'Essay Writing', dueDate: '2023-11-01', status: 'GRADED' },
+  { id: 'hw_5', class: '11-Sci', subject: 'Chemistry', title: 'Organic Reactions', dueDate: '2023-10-31', status: 'PENDING' },
+];
+
+// --- 8. MEDICAL LOGS ---
+export const DUMMY_MEDICAL_LOGS = [
+    { id: 1, time: '09:30 AM', student: 'Rohan Gupta (5-A)', issue: 'Fever (101°F)', action: 'Paracetamol given, Parents called', date: '2023-10-27' },
+    { id: 2, time: '11:15 AM', student: 'Sneha Patil (8-B)', issue: 'Minor Cut (Playground)', action: 'Dressed & Bandaged', date: '2023-10-27' },
+    { id: 3, time: '01:00 PM', student: 'Amit Kumar (10-A)', issue: 'Headache', action: 'Rest in infirmary', date: '2023-10-27' },
+    { id: 4, time: '10:00 AM', student: 'Priya Singh (6-B)', issue: 'Stomach Ache', action: 'Given antacid', date: '2023-10-26' },
+    { id: 5, time: '02:30 PM', student: 'Rahul Verma (12-Sci)', issue: 'Dizziness', action: 'BP Checked (Normal), Water given', date: '2023-10-26' },
+];
+
+// --- 9. VISITOR LOGS (Gate + Reception) ---
+export const DUMMY_GATE_LOGS = [
+    { id: 1, type: 'VISITOR', name: 'Ramesh Courier', purpose: 'Amazon Delivery', time: '10:30 AM', status: 'EXITED', date: '2023-10-27' },
+    { id: 2, type: 'PARENT', name: 'Mrs. Sharma', purpose: 'Fee Payment', time: '11:15 AM', status: 'INSIDE', date: '2023-10-27' },
+    { id: 3, type: 'STAFF', name: 'S. Gupta', purpose: 'Late Entry', time: '08:45 AM', status: 'INSIDE', date: '2023-10-27' },
+    { id: 4, type: 'VENDOR', name: 'Water Supply', purpose: 'Refill', time: '07:00 AM', status: 'EXITED', date: '2023-10-27' },
+    { id: 5, type: 'VISITOR', name: 'Electrician', purpose: 'AC Repair', time: '12:00 PM', status: 'INSIDE', date: '2023-10-27' },
+];
+
+export const DUMMY_RECEPTION_VISITORS = [
+    { id: 1, name: 'Vikram Singh', student: 'Rohan (6-A)', purpose: 'Meeting Principal', time: '09:00 AM', status: 'WAITING' },
+    { id: 2, name: 'Anita Desai', student: 'Priya (10-C)', purpose: 'Early Pickup', time: '12:30 PM', status: 'APPROVED' },
+    { id: 3, name: 'Rajesh Koothrappali', student: 'None', purpose: 'Job Interview', time: '11:00 AM', status: 'COMPLETED' },
+    { id: 4, name: 'Sheldon Cooper', student: 'None', purpose: 'Guest Lecture', time: '10:00 AM', status: 'COMPLETED' },
+];
+
+// --- 10. MAINTENANCE TICKETS ---
+export const DUMMY_TICKETS = [
+    { id: 'T-101', location: 'Chemistry Lab', issue: 'Leaking Tap', priority: 'MEDIUM', status: 'OPEN', reportedBy: 'HOD Science' },
+    { id: 'T-102', location: 'Class 5-B', issue: 'Broken Bench', priority: 'LOW', status: 'ASSIGNED', reportedBy: 'Class Teacher' },
+    { id: 'T-103', location: 'Server Room', issue: 'AC Malfunction', priority: 'CRITICAL', status: 'PENDING', reportedBy: 'IT Admin' },
+    { id: 'T-104', location: 'Girls Washroom', issue: 'Light not working', priority: 'HIGH', status: 'RESOLVED', reportedBy: 'Housekeeping' },
+    { id: 'T-105', location: 'Library', issue: 'Fan noisy', priority: 'LOW', status: 'OPEN', reportedBy: 'Librarian' },
+];
+
+// --- 11. SYLLABUS ---
+export const DUMMY_SYLLABUS = [
+    { id: 1, teacher: 'A. Verma', subject: 'Physics', class: 'X-A', completed: 65, target: 70, status: 'ON_TRACK' },
+    { id: 2, teacher: 'S. Khan', subject: 'Chemistry', class: 'X-B', completed: 40, target: 60, status: 'LAGGING' },
+    { id: 3, teacher: 'R. Sharma', subject: 'Maths', class: 'X-A', completed: 80, target: 80, status: 'AHEAD' },
+    { id: 4, teacher: 'P. Iyer', subject: 'Biology', class: 'IX-A', completed: 50, target: 55, status: 'ON_TRACK' },
+    { id: 5, teacher: 'M. Singh', subject: 'History', class: 'VIII-C', completed: 30, target: 45, status: 'CRITICAL' },
+];
+
+// --- 12. COUNSELING SESSIONS ---
+export const DUMMY_COUNSELING = [
+    { id: 1, student: 'Amit Verma (9-C)', category: 'Behavioral', note: 'Showing signs of withdrawal. Recommended art therapy.', date: '2023-10-24' },
+    { id: 2, student: 'Neha Kapoor (10-A)', category: 'Academic Stress', note: 'Anxious about boards. Exam fear session conducted.', date: '2023-10-25' },
+    { id: 3, student: 'Rahul Singh (8-B)', category: 'Disruptive', note: 'Aggressive in playground. Parent meeting scheduled.', date: '2023-10-26' },
+    { id: 4, student: 'Sita Ram (7-A)', category: 'Social', note: 'Difficulty making friends. Peer buddy assigned.', date: '2023-10-23' },
+    { id: 5, student: 'John Doe (11-Sci)', category: 'Career', note: 'Confused about stream. Aptitude test scheduled.', date: '2023-10-22' },
+];
+
 // --- MASTER EXPORT ---
 export const SOVEREIGN_GENESIS_DATA = {
   students: DUMMY_STUDENTS,
@@ -104,5 +163,12 @@ export const SOVEREIGN_GENESIS_DATA = {
   books: DUMMY_BOOKS,
   buses: DUMMY_BUSES,
   hostel: DUMMY_HOSTEL,
-  invoices: DUMMY_INVOICES
+  invoices: DUMMY_INVOICES,
+  homework: DUMMY_HOMEWORK,
+  medicalLogs: DUMMY_MEDICAL_LOGS,
+  gateLogs: DUMMY_GATE_LOGS,
+  visitors: DUMMY_RECEPTION_VISITORS,
+  tickets: DUMMY_TICKETS,
+  syllabus: DUMMY_SYLLABUS,
+  counseling: DUMMY_COUNSELING
 };

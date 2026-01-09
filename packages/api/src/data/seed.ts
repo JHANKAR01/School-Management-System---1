@@ -1,6 +1,17 @@
-
-import { PrismaClient } from '@prisma/client';
+// import { PrismaClient } from '@prisma/client';
 import { SOVEREIGN_GENESIS_DATA } from './dummy-data';
+
+// Mock PrismaClient
+class PrismaClient {
+  async $disconnect() {}
+  transaction = { deleteMany: async () => {} };
+  invoice = { deleteMany: async () => {}, createMany: async (args: any) => {} };
+  attendance = { deleteMany: async () => {} };
+  student = { deleteMany: async () => {}, create: async (args: any) => {} };
+  user = { deleteMany: async () => {}, create: async (args: any) => {} };
+  book = { createMany: async (args: any) => {} };
+  bus = { createMany: async (args: any) => {} };
+}
 
 const prisma = new PrismaClient();
 

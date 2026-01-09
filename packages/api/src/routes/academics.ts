@@ -1,8 +1,10 @@
+
 import { Hono } from 'hono';
 import { getTenantDB } from '../db';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { UserRole } from '../../../../types';
 import { generatePDFMarksheet } from '../services/pdf-service';
+import { SOVEREIGN_GENESIS_DATA } from '../data/dummy-data';
 
 type Variables = {
   user: {
@@ -33,10 +35,12 @@ academicsRouter.get('/papers', requireRole([UserRole.EXAM_CELL, UserRole.PRINCIP
 
 // --- HOD: Syllabus Tracking ---
 academicsRouter.get('/syllabus', requireRole([UserRole.HOD, UserRole.PRINCIPAL]), async (c) => {
-  return c.json([
-    { id: 1, teacher: 'A. Verma', subject: 'Physics', class: 'X-A', completed: 65, target: 70, status: 'ON_TRACK' },
-    { id: 2, teacher: 'S. Khan', subject: 'Chemistry', class: 'X-B', completed: 40, target: 60, status: 'LAGGING' },
-  ]);
+  return c.json(SOVEREIGN_GENESIS_DATA.syllabus);
+});
+
+// --- HOMEWORK ---
+academicsRouter.get('/homework', requireRole([UserRole.TEACHER, UserRole.PRINCIPAL, UserRole.STUDENT, UserRole.PARENT]), async (c) => {
+  return c.json(SOVEREIGN_GENESIS_DATA.homework);
 });
 
 // --- VICE PRINCIPAL: Timetables & Substitution ---
