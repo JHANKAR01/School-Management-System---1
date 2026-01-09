@@ -22,10 +22,15 @@ const MainLayout: React.FC<{
     switch(user.role) {
       case UserRole.SCHOOL_ADMIN: return 'STAFF_MGMT';
       case UserRole.PRINCIPAL: return 'OVERVIEW';
+      case UserRole.VICE_PRINCIPAL: return 'TIMETABLES';
       case UserRole.FINANCE_MANAGER: return 'COLLECTIONS';
       case UserRole.FLEET_MANAGER: return 'LIVE_TRACKING';
       case UserRole.LIBRARIAN: return 'CIRCULATION';
       case UserRole.WARDEN: return 'ALLOCATION';
+      case UserRole.ADMISSIONS_OFFICER: return 'INQUIRIES';
+      case UserRole.NURSE: return 'MEDICAL_LOGS';
+      case UserRole.INVENTORY_MANAGER: return 'STOCK_REGISTRY';
+      case UserRole.EXAM_CELL: return 'EXAM_SCHEDULE';
       case UserRole.TEACHER: return 'ATTENDANCE';
       case UserRole.PARENT: return 'FEES';
       default: return 'HOME';

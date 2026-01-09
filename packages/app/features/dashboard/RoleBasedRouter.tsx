@@ -11,7 +11,10 @@ import { BusFleet } from '../transport/BusFleet';
 import { LibraryManagement } from '../library/LibraryManagement';
 import { HostelWarden } from '../hostel/HostelWarden';
 import { Gradebook } from '../academics/Gradebook';
-import { useAttendance } from '../attendance/useAttendance';
+import { AdmissionsDashboard } from '../admissions/AdmissionsDashboard';
+import { InfirmaryDashboard } from '../health/InfirmaryDashboard';
+import { InventoryDashboard } from '../inventory/InventoryDashboard';
+
 import { generateUPILink } from '../../../api/src/upi-engine';
 
 interface Props {
@@ -97,6 +100,14 @@ export const RoleBasedRouter: React.FC<Props> = ({ role, school, activeModule })
     case UserRole.PRINCIPAL:
       return <PrincipalDashboard activeModule={activeModule} />;
 
+    case UserRole.VICE_PRINCIPAL:
+      return (
+        <div className="p-6 text-center text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-800">Vice Principal Ops</h1>
+          <p>Timetable Substitution & Syllabus Tracking Module</p>
+        </div>
+      );
+
     case UserRole.FINANCE_MANAGER:
       return <FinanceDashboard school={school} activeModule={activeModule} />;
 
@@ -119,6 +130,23 @@ export const RoleBasedRouter: React.FC<Props> = ({ role, school, activeModule })
       return (
         <div className="p-6">
           <HostelWarden />
+        </div>
+      );
+    
+    case UserRole.ADMISSIONS_OFFICER:
+      return <AdmissionsDashboard />;
+      
+    case UserRole.NURSE:
+      return <InfirmaryDashboard />;
+      
+    case UserRole.INVENTORY_MANAGER:
+      return <InventoryDashboard />;
+      
+    case UserRole.EXAM_CELL:
+      return (
+        <div className="p-6 text-center text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-800">Exam Cell Secure Zone</h1>
+          <p>Question Paper Inventory & Bulk Printing</p>
         </div>
       );
 

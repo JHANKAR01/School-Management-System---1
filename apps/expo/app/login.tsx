@@ -93,6 +93,22 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
           userRole = UserRole.WARDEN;
           userName = 'Hostel Warden';
           break;
+        case 'nurse':
+          userRole = UserRole.NURSE;
+          userName = 'Sister Mary';
+          break;
+        case 'admissions':
+          userRole = UserRole.ADMISSIONS_OFFICER;
+          userName = 'Admissions Desk';
+          break;
+        case 'inventory':
+          userRole = UserRole.INVENTORY_MANAGER;
+          userName = 'Store Keeper';
+          break;
+        case 'exam':
+          userRole = UserRole.EXAM_CELL;
+          userName = 'Exam Controller';
+          break;
         case 'teacher':
           userRole = UserRole.TEACHER;
           userName = 'Radha Miss';
@@ -106,7 +122,7 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
           userName = 'System Root';
           break;
         default:
-          setError('Invalid Role. Try .admin, .principal, .finance, .fleet, .librarian');
+          setError('Invalid Role.');
           setLoading(false);
           return;
       }
@@ -144,7 +160,7 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
                 type="text"
                 required
                 className="relative block w-full rounded-t-md border-0 py-3 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="demo.admin / demo.finance / demo.fleet"
+                placeholder="demo.admin / demo.nurse / demo.inventory"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -192,7 +208,11 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
              <span>|</span>
              <button onClick={() => setUsername('demo.finance')} className="hover:underline">Finance</button>
              <span>|</span>
-             <button onClick={() => setUsername('demo.fleet')} className="hover:underline">Fleet</button>
+             <button onClick={() => setUsername('demo.nurse')} className="hover:underline">Nurse</button>
+             <span>|</span>
+             <button onClick={() => setUsername('demo.admissions')} className="hover:underline">Admissions</button>
+             <span>|</span>
+             <button onClick={() => setUsername('demo.inventory')} className="hover:underline">Store</button>
            </div>
         </div>
       </div>

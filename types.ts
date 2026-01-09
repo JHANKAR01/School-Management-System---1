@@ -2,10 +2,15 @@ export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',      // Platform Owner
   SCHOOL_ADMIN = 'SCHOOL_ADMIN',    // HR & Access Control (HR Manager)
   PRINCIPAL = 'PRINCIPAL',          // Academic Head (Results, Timetables)
+  VICE_PRINCIPAL = 'VICE_PRINCIPAL', // Academic Ops (Substitutions, Syllabus)
   FINANCE_MANAGER = 'FINANCE_MANAGER', // Accountant (Fees, Payroll)
   FLEET_MANAGER = 'FLEET_MANAGER',  // Transport Head
+  ADMISSIONS_OFFICER = 'ADMISSIONS_OFFICER', // Lead Management
+  EXAM_CELL = 'EXAM_CELL',          // Exam Scheduling & Printing
   LIBRARIAN = 'LIBRARIAN',          // Library Head
   WARDEN = 'WARDEN',                // Hostel Head
+  NURSE = 'NURSE',                  // Infirmary Head
+  INVENTORY_MANAGER = 'INVENTORY_MANAGER', // Assets & Stationery
   TEACHER = 'TEACHER',              // Classroom Staff
   ACCOUNTANT = 'ACCOUNTANT',        // Junior Finance Staff
   PARENT = 'PARENT',

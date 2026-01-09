@@ -43,6 +43,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'ATTENDANCE_REP', label: 'Attendance Reports', icon: '📋' },
         ];
 
+      case UserRole.VICE_PRINCIPAL: // Operations Head
+        return [
+          { id: 'TIMETABLES', label: 'Timetables', icon: '📅' },
+          { id: 'SUBSTITUTIONS', label: 'Substitutions', icon: '🔄' },
+          { id: 'SYLLABUS', label: 'Syllabus Tracker', icon: '📉' },
+        ];
+
       case UserRole.FINANCE_MANAGER: // Accountant
         return [
           { id: 'COLLECTIONS', label: 'Fee Collections', icon: '💰' },
@@ -56,6 +63,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'FLEET_MGMT', label: 'Buses & Drivers', icon: '🚌' },
           { id: 'ROUTES', label: 'Route Planning', icon: '🗺️' },
         ];
+      
+      case UserRole.ADMISSIONS_OFFICER:
+        return [
+          { id: 'INQUIRIES', label: 'Inquiries (CRM)', icon: '📞' },
+          { id: 'REGISTRATION', label: 'Student Reg.', icon: '📝' },
+        ];
+
+      case UserRole.EXAM_CELL:
+        return [
+          { id: 'EXAM_SCHEDULE', label: 'Exam Schedule', icon: '🗓️' },
+          { id: 'PAPER_INVENTORY', label: 'Paper Inventory', icon: '🖨️' },
+        ];
 
       case UserRole.LIBRARIAN:
         return [
@@ -67,6 +86,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return [
           { id: 'ALLOCATION', label: 'Room Allocation', icon: '🛏️' },
           { id: 'NIGHT_ATTENDANCE', label: 'Night Roll Call', icon: '🌙' },
+        ];
+
+      case UserRole.NURSE:
+        return [
+          { id: 'MEDICAL_LOGS', label: 'Infirmary Logs', icon: '🩺' },
+          { id: 'VACCINATIONS', label: 'Vaccination Status', icon: '💉' },
+        ];
+
+      case UserRole.INVENTORY_MANAGER:
+        return [
+          { id: 'STOCK_REGISTRY', label: 'Stock Registry', icon: '📦' },
+          { id: 'REQUISITIONS', label: 'Staff Requests', icon: '📋' },
         ];
 
       case UserRole.TEACHER:
