@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SovereignButton, SovereignSkeleton } from '../../components/SovereignComponents';
-import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
+import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
 
 export const HostelWarden = () => {
   const queryClient = useQueryClient();

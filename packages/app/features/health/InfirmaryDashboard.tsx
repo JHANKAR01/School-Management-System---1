@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PageHeader, SovereignSkeleton } from '../../components/SovereignComponents';
-import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
+import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
 
 export const InfirmaryDashboard = () => {
   const { data: logs, isLoading } = useQuery({

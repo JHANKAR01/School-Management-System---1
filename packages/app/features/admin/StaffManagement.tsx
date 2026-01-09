@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { UserRole } from '../../../../types';
 import { SovereignButton, SovereignTable, SovereignInput, SovereignSkeleton } from '../../components/SovereignComponents';
-import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
+import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
 
 export const StaffManagement = () => {
   const queryClient = useQueryClient();

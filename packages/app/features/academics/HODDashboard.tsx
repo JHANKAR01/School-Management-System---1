@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { SovereignTable, PageHeader, SovereignBadge } from '../../components/SovereignComponents';
-import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
+import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
 
 export const HODDashboard = () => {
   const { data: syllabus } = useQuery({

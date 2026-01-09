@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import LoginScreen from './apps/expo/app/login';
-import SuperAdminOnboarding from './apps/next/pages/super-admin/onboarding.tsx';
+import SuperAdminOnboarding from './apps/next/pages/super-admin/onboarding';
 import { SchoolConfig, UserRole, LanguageCode, User, AuthResponse } from './types';
 import { RoleBasedRouter } from './packages/app/features/dashboard/RoleBasedRouter';
 import { Sidebar } from './components/Sidebar';

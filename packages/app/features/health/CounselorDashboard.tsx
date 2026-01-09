@@ -3,7 +3,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { SovereignTable, PageHeader, StatCard, SovereignBadge } from '../../components/SovereignComponents';
 import { HeartPulse, Brain, UserPlus } from 'lucide-react';
-import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
+import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
 
 interface CounselorNote {
   id: number | string;

@@ -3,7 +3,7 @@ import React from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { SovereignTable, PageHeader, SovereignButton, SovereignBadge } from '../../components/SovereignComponents';
 import { ShieldAlert } from 'lucide-react';
-import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
+import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
 
 export const SecurityDashboard = () => {
   const { data: logs } = useQuery({
