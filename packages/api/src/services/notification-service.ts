@@ -2,11 +2,10 @@
 import * as admin from 'firebase-admin';
 
 // Initialize Firebase Admin (Singleton Pattern)
-// In a real deployment, these env vars are injected by the cloud provider (e.g. Vercel/AWS)
 if (!admin.apps.length) {
   try {
-    // Only attempt init if credentials exist to prevent crash in dev mode
-    if (process.env.FIREBASE_PRIVATE_KEY) {
+    // Check if running in a secure environment with keys
+    if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
       admin.initializeApp({
         credential: admin.credential.cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
@@ -14,12 +13,12 @@ if (!admin.apps.length) {
           privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
         }),
       });
-      console.log("[FCM] Firebase Admin Initialized");
+      console.log("[FCM] Firebase Admin Driver Online");
     } else {
-      console.warn("[FCM] Missing Credentials. Running in Simulation Mode.");
+      console.warn("[FCM] Credentials missing. Falling back to Simulation Driver.");
     }
   } catch (error) {
-    console.error('[FCM] Initialization Failed:', error);
+    console.error('[FCM] Driver Init Failed:', error);
   }
 }
 
@@ -33,13 +32,13 @@ interface NotificationPayload {
 export class NotificationService {
   
   static async sendPush(payload: NotificationPayload) {
-    // 1. Simulation Mode (Dev)
+    // 1. Simulation Mode (Dev / No Keys)
     if (!admin.apps.length) {
-      console.log(`[FCM-SIM] To: ${payload.token.slice(0, 10)}... | ${payload.title}`);
+      console.log(`[FCM-SIM] To: ${payload.token.slice(0, 10)}... | ${payload.title} | ${payload.body}`);
       return { success: true, simulated: true };
     }
 
-    // 2. Real FCM Send
+    // 2. Production Mode
     try {
       const response = await admin.messaging().send({
         token: payload.token,
@@ -51,8 +50,7 @@ export class NotificationService {
       });
       return { success: true, messageId: response };
     } catch (error) {
-      console.error('[FCM] Send Error:', error);
-      // Don't crash the main thread if push fails
+      console.error('[FCM] Delivery Failed:', error);
       return { success: false, error };
     }
   }
@@ -70,7 +68,7 @@ export class NotificationService {
     return this.sendPush({
       token: parentToken,
       title: "Absent Alert",
-      body: `${studentName} has been marked ABSENT today.`,
+      body: `${studentName} has been marked ABSENT today. Please contact class teacher if this is an error.`,
       data: { type: 'ATTENDANCE_ABSENT' }
     });
   }

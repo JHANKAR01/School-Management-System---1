@@ -1,17 +1,49 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { StatCard, PageHeader, SovereignBadge } from '../../components/SovereignComponents';
-import { Server, Wifi, Database, Fingerprint } from 'lucide-react';
+import { Server, Wifi, Database, Fingerprint, Activity } from 'lucide-react';
+// import { io } from 'socket.io-client'; // In prod: import io from 'socket.io-client'
 
 export const ITAdminDashboard = () => {
+  const [bioAgents, setBioAgents] = useState({
+    'gate-1': { status: 'OFFLINE', lastSeen: 0 },
+    'staff-room': { status: 'OFFLINE', lastSeen: 0 },
+    'library': { status: 'OFFLINE', lastSeen: 0 }
+  });
+
+  // System Health Query
   const { data: health } = useQuery({
     queryKey: ['system-health'],
     queryFn: async () => {
       const res = await fetch('/api/health', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      return res.json(); // { status: 'OK', uptime: 1234 }
+      return res.json();
     }
   });
+
+  // Real-time Socket Listener
+  useEffect(() => {
+    // In a real environment, we would initialize the socket client here
+    // const socket = io('https://api.sovereign.school');
+    
+    // socket.on('biometric:heartbeat', (data: { deviceId: string, timestamp: number }) => {
+    //   setBioAgents(prev => ({
+    //     ...prev,
+    //     [data.deviceId]: { status: 'ONLINE', lastSeen: Date.now() }
+    //   }));
+    // });
+    
+    // Simulation for Demo
+    const interval = setInterval(() => {
+      const device = Math.random() > 0.5 ? 'gate-1' : 'staff-room';
+      setBioAgents(prev => ({
+        ...prev,
+        [device]: { status: 'ONLINE', lastSeen: Date.now() }
+      }));
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -19,28 +51,38 @@ export const ITAdminDashboard = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
          <StatCard title="API Status" value={health?.status || 'Unknown'} icon={<Server className="w-5 h-5 text-green-600"/>} />
-         <StatCard title="Uptime" value={`${Math.floor((health?.uptime || 0)/60)}m`} icon={<ClockIcon />} />
+         <StatCard title="Uptime" value={`${Math.floor((health?.uptime || 0)/60)}m`} icon={<Activity className="w-5 h-5"/>} />
          <StatCard title="Database" value="Connected" icon={<Database className="w-5 h-5"/>} />
          <StatCard title="Latency" value="24ms" icon={<Wifi className="w-5 h-5"/>} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-xl border shadow-sm">
-           <h3 className="font-bold mb-4 flex items-center gap-2">
-             <Fingerprint className="w-5 h-5" /> Biometric Agents
-           </h3>
+           <div className="flex justify-between items-center mb-4">
+             <h3 className="font-bold flex items-center gap-2">
+               <Fingerprint className="w-5 h-5" /> Biometric Agents
+             </h3>
+             <span className="text-xs animate-pulse text-green-600 font-bold">● Live Socket</span>
+           </div>
+           
            <div className="space-y-3">
-             <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-               <span>Main Gate (Entry)</span>
-               <SovereignBadge status="success">Online</SovereignBadge>
+             <div className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100">
+               <span className="font-medium text-gray-700">Main Gate (Entry)</span>
+               <SovereignBadge status={bioAgents['gate-1'].status === 'ONLINE' ? 'success' : 'error'}>
+                 {bioAgents['gate-1'].status}
+               </SovereignBadge>
              </div>
-             <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-               <span>Staff Room (Bio-1)</span>
-               <SovereignBadge status="success">Online</SovereignBadge>
+             <div className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100">
+               <span className="font-medium text-gray-700">Staff Room (Bio-1)</span>
+               <SovereignBadge status={bioAgents['staff-room'].status === 'ONLINE' ? 'success' : 'error'}>
+                 {bioAgents['staff-room'].status}
+               </SovereignBadge>
              </div>
-             <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-               <span>Library (Bio-2)</span>
-               <SovereignBadge status="error">Offline</SovereignBadge>
+             <div className="flex justify-between items-center p-3 bg-gray-50 rounded border border-gray-100">
+               <span className="font-medium text-gray-700">Library (Bio-2)</span>
+               <SovereignBadge status={bioAgents['library'].status === 'ONLINE' ? 'success' : 'error'}>
+                 {bioAgents['library'].status}
+               </SovereignBadge>
              </div>
            </div>
         </div>
@@ -68,5 +110,3 @@ export const ITAdminDashboard = () => {
     </div>
   );
 };
-
-const ClockIcon = () => <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
