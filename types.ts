@@ -9,6 +9,8 @@ export enum UserRole {
   LIBRARIAN = 'LIBRARIAN'
 }
 
+export type LanguageCode = 'en' | 'hi' | 'mr';
+
 export interface SchoolConfig {
   school_id: string;
   name: string;
@@ -132,4 +134,15 @@ export interface HostelRoom {
   occupied: number;
   gender: 'BOYS' | 'GIRLS';
   students: string[]; // List of Student IDs
+}
+
+// --- SECURITY & AUDIT ---
+export interface AuditLog {
+  id: string;
+  timestamp: string;
+  action: 'FEE_VERIFY' | 'GRADE_CHANGE' | 'SALARY_APPROVE' | 'LIBRARY_FINE' | 'LOGIN';
+  actorId: string;
+  targetId?: string;
+  details: string;
+  ipHash: string; // Anonymized IP
 }

@@ -1,29 +1,23 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLowDataMode } from '../../hooks/useLowDataMode';
 // NOTE: In a real Expo Native app, you would import 'expo-sqlite'
 // import * as SQLite from 'expo-sqlite';
 
 // --- MOCK SQLITE ADAPTER FOR WEB PREVIEW ---
-// This allows the Sovereign Logic to run in the browser for demonstration
-// while preserving the requested code structure.
-
 const mockSqlite = {
   execSync: (sql: string) => console.log('[SQLite Init]', sql),
   runSync: (sql: string, params?: any[]) => {
-    // Simulate SQLite INSERT using LocalStorage
     if (sql.includes('INSERT')) {
       const queue = JSON.parse(localStorage.getItem('sovereign_offline_db') || '[]');
       queue.push(params);
       localStorage.setItem('sovereign_offline_db', JSON.stringify(queue));
     }
-    // Simulate DELETE
     if (sql.includes('DELETE')) {
       localStorage.removeItem('sovereign_offline_db');
     }
-    console.log('[SQLite Run]', sql, params);
   },
   getAllSync: (sql: string) => {
     const queue = JSON.parse(localStorage.getItem('sovereign_offline_db') || '[]');
-    // Map array params back to object structure for the hook
     return queue.map((row: any[]) => ({
       studentId: row[0],
       status: row[1],
@@ -34,10 +28,7 @@ const mockSqlite = {
   }
 };
 
-// --- END MOCK ADAPTER ---
-
-// Initialize Sovereign Offline Database
-const db = mockSqlite; // In production: SQLite.openDatabaseSync('sovereign_offline.db');
+const db = mockSqlite; 
 
 const initDB = () => {
   db.execSync(`
@@ -71,12 +62,18 @@ const localDB = {
 
 export const useAttendance = (schoolId: string) => {
   const queryClient = useQueryClient();
+  const { isLowData } = useLowDataMode();
 
   const mutation = useMutation({
     mutationFn: async (vars: { studentId: string; status: 'PRESENT' | 'ABSENT'; date: string }) => {
       try {
-        // In prod, this calls your Hono/Fastify API
-        // Simulating API call failure for demonstration
+        // In Low Data Mode, we aggressively prefer offline queueing to save bandwidth overhead per request
+        // We only sync when the user explicitly hits "Force Sync" or batch triggers
+        if (isLowData) {
+            console.log("[Sovereign Low Data] Queuing attendance locally to batch later.");
+            throw new Error("Low Data Mode: Force Offline");
+        }
+
         if (Math.random() > 0.5) throw new Error("Simulated Offline Mode");
 
         const response = await fetch('/api/attendance', { 
@@ -86,15 +83,12 @@ export const useAttendance = (schoolId: string) => {
         if (!response.ok) throw new Error("Offline");
         return await response.json();
       } catch (error) {
-        // Sovereign Failover: Save to SQLite
-        console.warn("Network failed, saving to Sovereign Offline DB (SQLite/WebSQL)");
         localDB.save({ ...vars, schoolId });
         return { success: true, offline: true };
       }
     },
     onMutate: async (newAttendance) => {
       await queryClient.cancelQueries({ queryKey: ['attendance', schoolId] });
-      
       const previousAttendance = queryClient.getQueryData(['attendance', schoolId]);
 
       // Optimistic UI Update
@@ -115,8 +109,13 @@ export const useAttendance = (schoolId: string) => {
     const queue = localDB.getQueue();
     if (queue.length === 0) return;
     
-    // Logic to push SQLite rows to API in bulk
-    console.log(`Sovereign Sync: Pushing ${queue.length} records to cloud.`);
+    if (isLowData) {
+        console.log(`[Sovereign Batch Sync] Compressing ${queue.length} records into single payload...`);
+        // In prod: await fetch('/api/attendance/batch', { body: JSON.stringify({ records: queue }) })
+    } else {
+        console.log(`[Sovereign Sync] Pushing ${queue.length} records individually.`);
+    }
+
     localDB.clearQueue();
     await queryClient.invalidateQueries({ queryKey: ['attendance', schoolId] });
   };
