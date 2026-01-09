@@ -177,7 +177,7 @@ export interface HostelRoom {
 export interface AuditLog {
   id: string;
   timestamp: string;
-  action: 'FEE_VERIFY' | 'GRADE_CHANGE' | 'SALARY_APPROVE' | 'LIBRARY_FINE' | 'LOGIN';
+  action: 'FEE_VERIFY' | 'GRADE_CHANGE' | 'SALARY_APPROVE' | 'LIBRARY_FINE' | 'LOGIN' | 'CREATE_STAFF' | 'TERMINATE_STAFF';
   actorId: string;
   targetId?: string;
   details: string;
