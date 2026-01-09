@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { SchoolConfig, User, UserRole, AuthResponse } from '../../../../types';
-import { SovereignButton, SovereignInput } from '../../../packages/app/components/SovereignComponents';
+import { SovereignButton, SovereignInput } from '../../../../packages/app/components/SovereignComponents';
 import { ShieldCheck, Lock, User as UserIcon, Check, Loader2 } from 'lucide-react';
 
 // Mock DB of Schools
