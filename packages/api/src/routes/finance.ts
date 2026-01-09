@@ -1,3 +1,4 @@
+
 import { Hono } from 'hono';
 import { getTenantDB } from '../db';
 import { authMiddleware, requireRole } from '../middleware/auth';
@@ -42,22 +43,39 @@ financeRouter.post('/reconcile', async (c) => {
   return c.json({ results });
 });
 
+// CREATE INVOICE (With Auto-Discount)
 financeRouter.post('/generate-fee', async (c) => {
   const user = c.get('user');
   const db = getTenantDB(user.school_id, user.role);
-  const { studentId, baseAmount } = await c.req.json();
+  const { studentId, baseAmount, description, dueDate } = await c.req.json();
   
-  // Use robust sibling utility
+  // 1. Calculate Discount
   const discountData = await calculateSiblingDiscount(studentId, baseAmount, db);
-  
   const finalAmount = baseAmount - discountData.amount;
 
+  // 2. Persist Invoice to DB
+  const invoice = await db.invoice.create({
+    data: {
+      school_id: user.school_id,
+      student_id: studentId,
+      amount: finalAmount,
+      base_amount: baseAmount,
+      discount_amount: discountData.amount,
+      discount_reason: discountData.applied ? 'SIBLING_DISCOUNT' : null,
+      description: description || 'Term Fee',
+      due_date: dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default +30 days
+      status: 'PENDING'
+    }
+  });
+
   return c.json({
-    studentId,
-    baseAmount,
-    discount: discountData.amount,
-    discountReason: discountData.applied ? 'SIBLING_DISCOUNT' : null,
-    finalAmount
+    success: true,
+    invoice,
+    breakdown: {
+      base: baseAmount,
+      discount: discountData.amount,
+      total: finalAmount
+    }
   });
 });
 

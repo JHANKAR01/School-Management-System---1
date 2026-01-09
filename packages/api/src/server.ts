@@ -2,7 +2,6 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { Server } from 'socket.io';
-import { createServer } from 'http';
 import { authMiddleware } from './middleware/auth';
 import { staffRouter } from './routes/staff';
 import { academicsRouter } from './routes/academics';
@@ -33,7 +32,7 @@ app.route('/api/jitsi', jitsiRouter);
 app.route('/api/operations', operationsRouter);
 
 // --- REAL-TIME LAYER (Socket.io) ---
-const httpServer = createServer(serve({ fetch: app.fetch, port: 3000 }));
+const httpServer = serve({ fetch: app.fetch, port: 3000 });
 const io = new Server(httpServer, {
   cors: { origin: "*", methods: ["GET", "POST"] }
 });

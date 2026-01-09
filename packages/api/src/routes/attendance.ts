@@ -1,10 +1,18 @@
+
 import { getRLSContext } from '../middleware/auth';
 import { UserRole } from '../../../../types';
+import { NotificationService } from '../services/notification-service';
 
-// Mock DB (Prisma Client)
+// Mock DB (Prisma Client Wrapper)
 const prisma = {
   attendance: {
     create: async (data: any) => { console.log('DB Insert:', data); return data; }
+  },
+  student: {
+    findUnique: async (query: any) => { 
+        // Mock returning a student with a token
+        return { id: query.where.id, name: 'Student Name', parent_fcm_token: 'mock_device_token_abc123' }; 
+    }
   }
 };
 
@@ -21,7 +29,6 @@ interface HonoContext {
 export async function submitAttendance(c: HonoContext) {
   try {
     // 1. Context Extraction & Security Check
-    // This simulates: `const user = c.get('user')`
     const mockReq = { 
         user: c.user || { id: 't1', role: UserRole.TEACHER, school_id: 'sch_123' },
         headers: {} 
@@ -35,7 +42,6 @@ export async function submitAttendance(c: HonoContext) {
     const { studentId, status, date } = body;
 
     // 4. Secure DB Operation
-    // We explicitly inject `school_id` from the trusted RLS context, IGNORING user input for it.
     const record = await prisma.attendance.create({
       data: {
         student_id: studentId,
@@ -45,6 +51,19 @@ export async function submitAttendance(c: HonoContext) {
         marked_by: mockReq.user.id
       }
     });
+
+    // 5. TRIGGER: Absent Alert
+    if (status === 'ABSENT') {
+      // In background (don't block response)
+      setImmediate(async () => {
+        try {
+            const student = await prisma.student.findUnique({ where: { id: studentId } });
+            if (student && student.parent_fcm_token) {
+                await NotificationService.sendAttendanceAlert(student.name, student.parent_fcm_token);
+            }
+        } catch(e) { console.error("Alert Trigger Failed", e); }
+      });
+    }
 
     return c.json({ success: true, record });
 

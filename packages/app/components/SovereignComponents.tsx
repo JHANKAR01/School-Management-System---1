@@ -125,7 +125,7 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, trend, icon, s
 };
 
 // --- 5. SOVEREIGN TABLE (HIGH DENSITY) ---
-interface Column<T> {
+export interface Column<T> {
   header: string;
   accessor: keyof T | ((item: T) => React.ReactNode);
   className?: string;
