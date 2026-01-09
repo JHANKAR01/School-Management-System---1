@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { UserRole, SchoolConfig } from '../../../../types';
 
@@ -6,7 +7,7 @@ import { TeacherDashboard } from './TeacherDashboard';
 import { ParentDashboard } from './ParentDashboard';
 import { StaffManagement } from '../admin/StaffManagement';
 
-// Feature Components (Departmental Wrappers)
+// Feature Components
 import { BusFleet } from '../transport/BusFleet';
 import { LibraryManagement } from '../library/LibraryManagement';
 import { HostelWarden } from '../hostel/HostelWarden';
@@ -15,7 +16,10 @@ import { AdmissionsDashboard } from '../admissions/AdmissionsDashboard';
 import { InfirmaryDashboard } from '../health/InfirmaryDashboard';
 import { InventoryDashboard } from '../inventory/InventoryDashboard';
 
+// Components
 import { generateUPILink } from '../../../api/src/upi-engine';
+import { StatCard, SovereignButton, PageHeader } from '../../components/SovereignComponents';
+import { Wallet, Users, AlertCircle, FileText, CheckCircle, TrendingUp, BookOpen, Clock } from 'lucide-react';
 
 interface Props {
   role: UserRole;
@@ -23,8 +27,7 @@ interface Props {
   activeModule: string;
 }
 
-// --- DEPARTMENTAL DASHBOARDS (Inline for Brevity, logically split) ---
-
+// --- 1. FINANCE DASHBOARD ---
 const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: string }> = ({ school, activeModule }) => {
   const sampleFeeLink = generateUPILink({
     payeeVPA: school.upi_vpa,
@@ -35,159 +38,116 @@ const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: string }>
   });
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Finance Department</h1>
+    <div className="p-6 md:p-8 max-w-7xl mx-auto">
+      <PageHeader title="Finance Department" subtitle="Ledger & Collection Management" />
+      
+      {/* KPI GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+         <StatCard title="Total Collected" value="₹45.2L" trend={{ value: 12, isPositive: true }} icon={<Wallet className="w-5 h-5" />} />
+         <StatCard title="Pending Dues" value="₹8.4L" trend={{ value: 5, isPositive: false }} icon={<AlertCircle className="w-5 h-5" />} />
+         <StatCard title="Expenses" value="₹12.1L" icon={<TrendingUp className="w-5 h-5" />} subtitle="This Month" />
+         <StatCard title="Cash on Hand" value="₹3.2L" icon={<CheckCircle className="w-5 h-5" />} />
+      </div>
+
       {activeModule === 'COLLECTIONS' && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Fee Collections</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-4 bg-green-50 rounded-lg border border-green-100">
-                 <p className="text-sm text-green-800 font-bold">Total Collected (Today)</p>
-                 <p className="text-2xl font-black text-green-900">₹45,200</p>
+           <div className="mt-2 p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-gray-700 uppercase">Direct UPI Link Generator</h3>
+                <code className="block mt-1 text-xs text-gray-500 font-mono break-all">{sampleFeeLink}</code>
               </div>
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-                 <p className="text-sm text-blue-800 font-bold">Pending Invoices</p>
-                 <p className="text-2xl font-black text-blue-900">12</p>
-              </div>
-           </div>
-           <div className="mt-6">
-              <h3 className="text-sm font-bold text-gray-500 uppercase">Direct UPI Link Generator</h3>
-              <div className="mt-2 p-3 bg-gray-50 font-mono text-xs break-all border rounded">
-                {sampleFeeLink}
-              </div>
+              <SovereignButton variant="secondary" onClick={() => navigator.clipboard.writeText(sampleFeeLink)}>Copy</SovereignButton>
            </div>
         </div>
       )}
       {activeModule === 'RECONCILIATION' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Bank Reconciliation</h2>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50">
-             <p className="text-gray-500">Upload Bank CSV Statement here to match UTRs.</p>
-          </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🏦</div>
+          <h2 className="text-xl font-bold text-gray-800">Bank Reconciliation</h2>
+          <p className="text-gray-500 mt-2">Upload Bank CSV Statement here to match UTRs.</p>
         </div>
       )}
     </div>
   );
 };
 
+// --- 2. PRINCIPAL DASHBOARD ---
 const PrincipalDashboard: React.FC<{ activeModule: string }> = ({ activeModule }) => {
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Principal's Office</h1>
+    <div className="p-6 md:p-8 max-w-7xl mx-auto">
+      <PageHeader title="Principal's Office" subtitle="Academic Overview & Analytics" />
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+         <StatCard title="Total Students" value="1,240" trend={{ value: 2, isPositive: true }} icon={<Users className="w-5 h-5" />} />
+         <StatCard title="Avg Attendance" value="94%" trend={{ value: 1.5, isPositive: true }} icon={<CheckCircle className="w-5 h-5" />} />
+         <StatCard title="Staff Present" value="48/50" icon={<Users className="w-5 h-5" />} subtitle="2 on Leave" />
+         <StatCard title="Term Revenue" value="92%" icon={<Wallet className="w-5 h-5" />} subtitle="Collection Rate" />
+      </div>
+
       {activeModule === 'RESULTS' && <Gradebook />}
       {activeModule === 'CLASSROOMS' && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border text-center text-gray-500">
+        <div className="bg-white p-12 rounded-xl shadow-sm border text-center text-gray-500">
           Academic Timetable & Classroom Allocation View
         </div>
       )}
        {activeModule === 'OVERVIEW' && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border text-center text-gray-500">
-          School-Wide Performance Metrics
+        <div className="bg-white p-12 rounded-xl shadow-sm border text-center text-gray-500">
+          School-Wide Performance Metrics Chart
         </div>
       )}
     </div>
   );
 };
 
+// --- 3. PLACEHOLDER ---
 const PlaceholderDashboard: React.FC<{ title: string, subtitle: string }> = ({ title, subtitle }) => (
-  <div className="p-8 flex flex-col items-center justify-center min-h-[500px] text-center">
-    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4 text-3xl">🚧</div>
-    <h1 className="text-2xl font-bold text-gray-800 mb-2">{title}</h1>
-    <p className="text-gray-500 max-w-md">{subtitle}</p>
-    <div className="mt-6 px-4 py-2 bg-yellow-50 text-yellow-800 text-xs font-bold rounded border border-yellow-200">
-      Feature Flag: COMING_SOON
+  <div className="p-6 md:p-8 max-w-7xl mx-auto">
+    <PageHeader title={title} subtitle={subtitle} />
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 opacity-50">
+        <StatCard title="Metric 1" value="--" icon={<ActivityIcon />} />
+        <StatCard title="Metric 2" value="--" icon={<ActivityIcon />} />
+        <StatCard title="Metric 3" value="--" icon={<ActivityIcon />} />
+        <StatCard title="Metric 4" value="--" icon={<ActivityIcon />} />
+    </div>
+    <div className="bg-gray-50/50 border-2 border-dashed border-gray-200 rounded-xl p-12 flex flex-col items-center justify-center text-center">
+      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm text-2xl">🚧</div>
+      <h3 className="text-lg font-bold text-gray-800">Module Under Construction</h3>
+      <p className="text-gray-500 max-w-md mt-2">This Sovereign Module is part of the next scheduled release.</p>
     </div>
   </div>
 );
 
-// --- MAIN ROUTER ---
+const ActivityIcon = () => <div className="w-5 h-5 bg-gray-200 rounded-full" />;
 
+// --- MAIN ROUTER ---
 export const RoleBasedRouter: React.FC<Props> = ({ role, school, activeModule }) => {
   
   switch(role) {
-    case UserRole.SCHOOL_ADMIN:
-      return <StaffManagement />; // HR Only
+    case UserRole.SCHOOL_ADMIN: return <StaffManagement />;
+    case UserRole.PRINCIPAL: return <PrincipalDashboard activeModule={activeModule} />;
+    case UserRole.FINANCE_MANAGER: return <FinanceDashboard school={school} activeModule={activeModule} />;
+    case UserRole.FLEET_MANAGER: return <div className="p-6"><BusFleet /></div>;
+    case UserRole.LIBRARIAN: return <div className="p-6"><LibraryManagement /></div>;
+    case UserRole.WARDEN: return <div className="p-6"><HostelWarden /></div>;
+    case UserRole.ADMISSIONS_OFFICER: return <AdmissionsDashboard />;
+    case UserRole.NURSE: return <InfirmaryDashboard />;
+    case UserRole.INVENTORY_MANAGER: return <InventoryDashboard />;
     
-    case UserRole.PRINCIPAL:
-      return <PrincipalDashboard activeModule={activeModule} />;
-
-    case UserRole.VICE_PRINCIPAL:
-      return (
-        <div className="p-6 text-center text-gray-500">
-          <h1 className="text-2xl font-bold text-gray-800">Vice Principal Ops</h1>
-          <p>Timetable Substitution & Syllabus Tracking Module</p>
-        </div>
-      );
-
-    case UserRole.FINANCE_MANAGER:
-      return <FinanceDashboard school={school} activeModule={activeModule} />;
-
-    case UserRole.FLEET_MANAGER:
-      return (
-        <div className="p-6 h-full flex flex-col">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Transport Control Tower</h1>
-          <BusFleet />
-        </div>
-      );
-
-    case UserRole.LIBRARIAN:
-      return (
-        <div className="p-6">
-          <LibraryManagement />
-        </div>
-      );
-
-    case UserRole.WARDEN:
-      return (
-        <div className="p-6">
-          <HostelWarden />
-        </div>
-      );
-    
-    case UserRole.ADMISSIONS_OFFICER:
-      return <AdmissionsDashboard />;
-      
-    case UserRole.NURSE:
-      return <InfirmaryDashboard />;
-      
-    case UserRole.INVENTORY_MANAGER:
-      return <InventoryDashboard />;
-      
-    case UserRole.EXAM_CELL:
-      return (
-        <div className="p-6 text-center text-gray-500">
-          <h1 className="text-2xl font-bold text-gray-800">Exam Cell Secure Zone</h1>
-          <p>Question Paper Inventory & Bulk Printing</p>
-        </div>
-      );
-
-    case UserRole.TEACHER:
-      return <TeacherDashboard school={school} activeModule={activeModule} />;
-
-    case UserRole.PARENT:
-      return <ParentDashboard school={school} activeModule={activeModule} />;
-      
+    // Complex Dashboards
+    case UserRole.TEACHER: return <TeacherDashboard school={school} activeModule={activeModule} />;
+    case UserRole.PARENT: 
     case UserRole.STUDENT:
-      return <ParentDashboard school={school} activeModule={activeModule} />; // Using Parent Dashboard for Student View for MVP
+        return <ParentDashboard school={school} activeModule={activeModule} />;
 
-    // --- NEW ROLES (Placeholders) ---
-    case UserRole.HOD:
-      return <PlaceholderDashboard title="Head of Department Portal" subtitle="Syllabus tracking and lesson plan approval workflows." />;
-      
-    case UserRole.COUNSELOR:
-      return <PlaceholderDashboard title="Counseling & Wellness" subtitle="Private session logs, behavioral tracking, and special education IEPs." />;
-      
-    case UserRole.RECEPTIONIST:
-      return <PlaceholderDashboard title="Front Desk" subtitle="Visitor management logs, appointment scheduling, and phone inquiry CRM." />;
-      
-    case UserRole.SECURITY_HEAD:
-      return <PlaceholderDashboard title="Security Command Center" subtitle="Gate entry/exit logs, staff shift management, and emergency broadcast system." />;
-      
-    case UserRole.ESTATE_MANAGER:
-      return <PlaceholderDashboard title="Estate & Maintenance" subtitle="Asset repair ticketing system, utility bill tracking, and vendor management." />;
-      
-    case UserRole.IT_ADMIN:
-      return <PlaceholderDashboard title="IT Administration" subtitle="System health monitoring, biometric device sync status, and hardware inventory." />;
+    // Placeholders
+    case UserRole.VICE_PRINCIPAL: return <PlaceholderDashboard title="Vice Principal Ops" subtitle="Timetables & Substitution" />;
+    case UserRole.EXAM_CELL: return <PlaceholderDashboard title="Exam Cell" subtitle="Question Papers & Printing" />;
+    case UserRole.HOD: return <PlaceholderDashboard title="Department Head" subtitle="Syllabus Tracking" />;
+    case UserRole.COUNSELOR: return <PlaceholderDashboard title="Counselor" subtitle="Student Wellness Logs" />;
+    case UserRole.RECEPTIONIST: return <PlaceholderDashboard title="Reception" subtitle="Visitor Management" />;
+    case UserRole.SECURITY_HEAD: return <PlaceholderDashboard title="Security" subtitle="Gate Entry & Alerts" />;
+    case UserRole.ESTATE_MANAGER: return <PlaceholderDashboard title="Estate Manager" subtitle="Maintenance Tickets" />;
+    case UserRole.IT_ADMIN: return <PlaceholderDashboard title="IT Admin" subtitle="System Health" />;
 
     default:
       return (

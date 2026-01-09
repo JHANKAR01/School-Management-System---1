@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
 import { SchoolConfig, User, UserRole, AuthResponse } from '../../../../types';
-import { SovereignButton } from '../../../../packages/app/components/SovereignComponents';
-import { ShieldCheck, School, Lock } from 'lucide-react';
+import { SovereignButton, SovereignInput } from '../../../../packages/app/components/SovereignComponents';
+import { ShieldCheck, School, Lock, User as UserIcon } from 'lucide-react';
 
 // Mock DB of Schools
 const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
@@ -24,6 +24,36 @@ const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
     location: { lat: 19.0760, lng: 72.8777 },
     upi_vpa: 'dav@upi'
   }
+};
+
+const QUICK_LOGIN_GROUPS = {
+  Management: [
+    { role: 'super', label: 'Super Admin' },
+    { role: 'admin', label: 'HR Admin' },
+    { role: 'principal', label: 'Principal' },
+    { role: 'vice_principal', label: 'Vice Prin.' },
+    { role: 'finance', label: 'Finance' },
+  ],
+  Operations: [
+    { role: 'admissions', label: 'Admissions' },
+    { role: 'exam', label: 'Exam Cell' },
+    { role: 'fleet', label: 'Transport' },
+    { role: 'librarian', label: 'Librarian' },
+    { role: 'warden', label: 'Warden' },
+    { role: 'nurse', label: 'Nurse' },
+    { role: 'inventory', label: 'Inventory' },
+    { role: 'security', label: 'Security' },
+    { role: 'estate', label: 'Estate' },
+    { role: 'it', label: 'IT Admin' },
+  ],
+  Users: [
+    { role: 'teacher', label: 'Teacher' },
+    { role: 'parent', label: 'Parent' },
+    { role: 'student', label: 'Student' },
+    { role: 'hod', label: 'HOD' },
+    { role: 'counselor', label: 'Counselor' },
+    { role: 'receptionist', label: 'Reception' },
+  ]
 };
 
 interface Props {
@@ -53,39 +83,35 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
         return;
       }
 
-      // Infer Role
       let userRole = UserRole.STUDENT;
       let userName = 'Student';
 
-      // Simple mapping for demo
-      const roleMap: Record<string, UserRole> = {
-        'admin': UserRole.SCHOOL_ADMIN,
-        'principal': UserRole.PRINCIPAL,
-        'finance': UserRole.FINANCE_MANAGER,
-        'teacher': UserRole.TEACHER,
-        'parent': UserRole.PARENT,
-        'student': UserRole.STUDENT,
-        'fleet': UserRole.FLEET_MANAGER,
-        'nurse': UserRole.NURSE,
-        'security': UserRole.SECURITY_HEAD,
-        'it': UserRole.IT_ADMIN
-      };
-
-      if (roleMap[roleSuffix]) {
-        userRole = roleMap[roleSuffix];
-        userName = roleSuffix.charAt(0).toUpperCase() + roleSuffix.slice(1) + " User";
-      } else if (roleSuffix === 'super') {
-        userRole = UserRole.SUPER_ADMIN;
-        userName = 'System Root';
+      // Advanced Role Logic
+      if (roleSuffix === 'super') userRole = UserRole.SUPER_ADMIN;
+      else if (Object.values(UserRole).includes(roleSuffix.toUpperCase() as UserRole)) {
+         userRole = roleSuffix.toUpperCase() as UserRole;
+         userName = roleSuffix.charAt(0).toUpperCase() + roleSuffix.slice(1).replace('_', ' ');
       } else {
-        // Default fallbacks for new roles
-        if (roleSuffix === 'hod') userRole = UserRole.HOD;
-        else if (roleSuffix === 'counselor') userRole = UserRole.COUNSELOR;
-        else if (roleSuffix === 'warden') userRole = UserRole.WARDEN;
-        else {
-             setError('Invalid Role Suffix.');
-             setLoading(false);
-             return;
+        // Fallback for simple map
+        const roleMap: Record<string, UserRole> = {
+          'admin': UserRole.SCHOOL_ADMIN,
+          'principal': UserRole.PRINCIPAL,
+          'finance': UserRole.FINANCE_MANAGER,
+          'teacher': UserRole.TEACHER,
+          'parent': UserRole.PARENT,
+          'student': UserRole.STUDENT,
+          'fleet': UserRole.FLEET_MANAGER,
+          'nurse': UserRole.NURSE,
+          'warden': UserRole.WARDEN,
+          'hod': UserRole.HOD
+        };
+        if (roleMap[roleSuffix]) {
+           userRole = roleMap[roleSuffix];
+           userName = roleSuffix.charAt(0).toUpperCase() + roleSuffix.slice(1);
+        } else {
+           setError('Invalid Role Suffix.');
+           setLoading(false);
+           return;
         }
       }
 
@@ -104,103 +130,110 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
     <button
       type="button"
       onClick={() => setUsername(`demo.${role}`)}
-      className="px-3 py-2 text-xs font-medium bg-gray-50 border border-gray-200 rounded-lg hover:bg-white hover:border-indigo-300 hover:shadow-sm transition-all text-gray-600 text-center truncate"
+      className="px-2 py-1.5 text-[10px] font-bold bg-white border border-gray-200 rounded shadow-sm hover:border-indigo-400 hover:text-indigo-600 transition-colors truncate"
     >
       {label}
     </button>
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* LEFT PANEL: BRANDING */}
-      <div className="hidden lg:flex w-1/2 bg-gray-900 relative items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
-        <div className="relative z-10 text-center px-12">
-           <div className="mb-6 flex justify-center">
-             <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
-                <ShieldCheck className="w-10 h-10 text-emerald-400" />
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-50 font-sans">
+      
+      {/* LEFT PANEL: BRANDING (Hidden on Mobile) */}
+      <div className="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/50 to-slate-900/90 z-10" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80')] bg-cover bg-center opacity-20" />
+        
+        <div className="relative z-20 text-center px-12 max-w-lg">
+           <div className="mb-8 flex justify-center">
+             <div className="w-24 h-24 bg-white/5 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl">
+                <ShieldCheck className="w-12 h-12 text-emerald-400 drop-shadow-lg" />
              </div>
            </div>
-           <h1 className="text-4xl font-bold text-white tracking-tight mb-4">Project Sovereign</h1>
-           <p className="text-indigo-200 text-lg leading-relaxed max-w-md mx-auto">
+           <h1 className="text-5xl font-black text-white tracking-tight mb-6">
+             PROJECT <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">SOVEREIGN</span>
+           </h1>
+           <p className="text-slate-300 text-lg leading-relaxed font-light">
              The offline-first, zero-fee ERP designed for the next generation of Indian education.
            </p>
-           <div className="mt-12 flex justify-center gap-8 text-white/40">
-              <div className="flex flex-col items-center">
-                 <School className="w-6 h-6 mb-2" />
-                 <span className="text-xs uppercase tracking-widest">Multi-Tenant</span>
-              </div>
-              <div className="flex flex-col items-center">
-                 <Lock className="w-6 h-6 mb-2" />
-                 <span className="text-xs uppercase tracking-widest">Sovereign Data</span>
+           
+           <div className="mt-12 flex justify-center gap-6">
+              <div className="px-4 py-2 rounded-full bg-white/5 border border-white/10 flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                 <span className="text-xs font-bold text-white uppercase tracking-widest">System Online</span>
               </div>
            </div>
         </div>
       </div>
 
-      {/* RIGHT PANEL: LOGIN FORM */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 lg:p-16 relative">
-         <div className="w-full max-w-md space-y-8">
-            <div className="text-center lg:text-left">
-              <h2 className="text-3xl font-bold text-gray-900">Sign in to your account</h2>
-              <p className="mt-2 text-sm text-gray-600">Access your school's Sovereign Dashboard</p>
+      {/* RIGHT PANEL: ACTION ZONE */}
+      <div className="w-full lg:w-1/2 flex flex-col h-full bg-slate-50 relative overflow-y-auto">
+         <div className="flex-1 flex flex-col justify-center items-center p-6 lg:p-12">
+            
+            <div className="w-full max-w-md bg-white/80 backdrop-blur-md p-8 rounded-2xl shadow-xl border border-white/50">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Welcome Back</h2>
+                  <p className="text-sm text-gray-500 mt-1">Sign in to your dashboard</p>
+                </div>
+
+                <form className="space-y-6" onSubmit={handleLogin}>
+                  <SovereignInput 
+                    label="User ID" 
+                    placeholder="e.g. demo.principal" 
+                    icon={<UserIcon className="w-4 h-4" />}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                  <SovereignInput 
+                    label="Password" 
+                    type="password"
+                    placeholder="••••••••" 
+                    icon={<Lock className="w-4 h-4" />}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+
+                  {error && (
+                    <div className="text-red-600 text-xs bg-red-50 p-3 rounded-lg border border-red-100 flex items-center font-bold">
+                      ⚠️ {error}
+                    </div>
+                  )}
+
+                  <SovereignButton type="submit" isLoading={loading} className="w-full py-3 text-base shadow-indigo-500/20">
+                    Secure Login
+                  </SovereignButton>
+                </form>
             </div>
 
-            <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-              <div className="space-y-4">
-                 <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-1">User ID</label>
-                   <input
-                     type="text"
-                     required
-                     className="block w-full rounded-lg border-gray-300 bg-gray-50 focus:bg-white focus:ring-indigo-500 focus:border-indigo-500 p-3 transition-colors"
-                     placeholder="e.g. demo.admin"
-                     value={username}
-                     onChange={(e) => setUsername(e.target.value)}
-                   />
-                 </div>
-                 <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                   <input
-                     type="password"
-                     required
-                     className="block w-full rounded-lg border-gray-300 bg-gray-50 focus:bg-white focus:ring-indigo-500 focus:border-indigo-500 p-3 transition-colors"
-                     placeholder="••••••••"
-                     value={password}
-                     onChange={(e) => setPassword(e.target.value)}
-                   />
-                 </div>
-              </div>
+            {/* QUICK LOGIN HUB */}
+            <div className="w-full max-w-md mt-8">
+               <div className="flex items-center gap-4 mb-4">
+                 <div className="h-px bg-gray-200 flex-1" />
+                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Developer Hub</span>
+                 <div className="h-px bg-gray-200 flex-1" />
+               </div>
 
-              {error && (
-                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-100 flex items-center">
-                  <span className="mr-2">⚠️</span> {error}
-                </div>
-              )}
-
-              <SovereignButton type="submit" isLoading={loading} className="w-full py-3 text-base">
-                Sign In
-              </SovereignButton>
-            </form>
-
-            <div className="mt-10 pt-10 border-t border-gray-100">
-               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 text-center">Quick Login Hub (Test Environment)</p>
-               <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                  <QuickLoginChip role="admin" label="Admin" />
-                  <QuickLoginChip role="principal" label="Principal" />
-                  <QuickLoginChip role="finance" label="Finance" />
-                  <QuickLoginChip role="fleet" label="Fleet" />
-                  <QuickLoginChip role="teacher" label="Teacher" />
-                  <QuickLoginChip role="parent" label="Parent" />
-                  <QuickLoginChip role="nurse" label="Nurse" />
-                  <QuickLoginChip role="security" label="Security" />
+               <div className="space-y-4">
+                  {Object.entries(QUICK_LOGIN_GROUPS).map(([category, roles]) => (
+                    <div key={category} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                       <h3 className="text-[10px] font-bold text-gray-500 uppercase mb-2 ml-1">{category}</h3>
+                       <div className="grid grid-cols-3 gap-2">
+                          {roles.map(r => (
+                            <QuickLoginChip key={r.role} role={r.role} label={r.label} />
+                          ))}
+                       </div>
+                    </div>
+                  ))}
                </div>
             </div>
+
          </div>
          
-         <p className="absolute bottom-6 text-xs text-gray-400">
-           &copy; 2024 Project Sovereign. v1.0.0-beta
-         </p>
+         <div className="p-4 text-center">
+            <p className="text-[10px] text-gray-400 font-mono">
+              v2.4.0-stable • Sovereign Encryption Active
+            </p>
+         </div>
       </div>
     </div>
   );
