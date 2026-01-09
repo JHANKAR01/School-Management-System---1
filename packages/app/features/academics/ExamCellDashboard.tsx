@@ -4,12 +4,19 @@ import { useQuery } from '@tanstack/react-query';
 import { SovereignTable, PageHeader, StatCard, SovereignBadge } from '../../components/SovereignComponents';
 import { FileText, Lock, Printer } from 'lucide-react';
 
+const MOCK_PAPERS = [
+    { id: 'QP-1', subject: 'Mathematics', class: 'X', copies: 150, status: 'PRINTED', location: 'Strong Room A' },
+    { id: 'QP-2', subject: 'Physics', class: 'XII', copies: 80, status: 'PENDING', location: '-' },
+    { id: 'QP-3', subject: 'English', class: 'IX', copies: 120, status: 'PRINTED', location: 'Strong Room B' },
+];
+
 export const ExamCellDashboard = () => {
   const { data: papers } = useQuery({
     queryKey: ['papers'],
     queryFn: async () => {
-      const res = await fetch('/api/academics/papers', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      return res.json();
+      // const res = await fetch('/api/academics/papers', ...);
+      // return res.json();
+      return MOCK_PAPERS;
     }
   });
 

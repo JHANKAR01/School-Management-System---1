@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SovereignButton, SovereignInput, SovereignTable, SovereignBadge } from '../../components/SovereignComponents';
+import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
 
 export const LibraryManagement = () => {
   const [isbn, setIsbn] = useState('');
@@ -10,24 +11,22 @@ export const LibraryManagement = () => {
   const { data: books } = useQuery({
     queryKey: ['books'],
     queryFn: async () => {
-      const res = await fetch('/api/logistics/books', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      return res.json();
+      // const res = await fetch('/api/logistics/books', ...);
+      // return res.json();
+      return SOVEREIGN_GENESIS_DATA.books;
     }
   });
   
   const returnMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/logistics/return-book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ isbn, studentId: 's1' })
-      });
-      return res.json();
+      // await fetch('/api/logistics/return-book', ...);
+      console.log("[DEMO] Returning Book ISBN:", isbn);
+      return { fine: 0 };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['books'] });
+      // queryClient.invalidateQueries({ queryKey: ['books'] });
       if (data.fine > 0) alert(`Book Returned. Fine of ₹${data.fine} added to invoice.`);
-      else alert("Book Returned. No fine.");
+      else alert("Book Returned. No fine (Mock).");
     }
   });
 

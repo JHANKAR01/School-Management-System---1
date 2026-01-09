@@ -2,6 +2,7 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SovereignButton, SovereignTable, SovereignBadge } from '../../components/SovereignComponents';
+import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
 
 export const BusFleet = () => {
   const queryClient = useQueryClient();
@@ -9,21 +10,25 @@ export const BusFleet = () => {
   const { data: buses } = useQuery({
     queryKey: ['buses'],
     queryFn: async () => {
-      const res = await fetch('/api/logistics/buses', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      return res.json();
+      // const res = await fetch('/api/logistics/buses', ...);
+      // return res.json();
+      return SOVEREIGN_GENESIS_DATA.buses.map(b => ({
+        ...b,
+        number: b.plateNumber, // Map mismatch
+        route: b.routeId,
+        status: 'ON_ROUTE', // Default for demo
+        occupied: Math.floor(b.capacity * 0.8),
+        driver: b.driverName
+      }));
     }
   });
 
   const assignMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/logistics/assign-route', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ studentId: 's1', routeId: 'r1' })
-      });
-      return res.json();
+      // await fetch('/api/logistics/assign-route', ...);
+      console.log("[DEMO] Route Assigned");
     },
-    onSuccess: () => alert("Route Assigned & Invoice Generated!")
+    onSuccess: () => alert("Route Assigned & Invoice Generated (Mock)")
   });
 
   const columns = [

@@ -2,13 +2,15 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PageHeader, SovereignSkeleton } from '../../components/SovereignComponents';
+import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
 
 export const InfirmaryDashboard = () => {
   const { data: logs, isLoading } = useQuery({
     queryKey: ['medical-logs'],
     queryFn: async () => {
-      const res = await fetch('/api/health/logs', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      return res.json();
+      // const res = await fetch('/api/health/logs', ...);
+      // return res.json();
+      return SOVEREIGN_GENESIS_DATA.medicalLogs;
     }
   });
 

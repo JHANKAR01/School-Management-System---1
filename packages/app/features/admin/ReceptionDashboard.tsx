@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SovereignTable, PageHeader, SovereignButton, SovereignInput, SovereignBadge } from '../../components/SovereignComponents';
+import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
 
 export const ReceptionDashboard = () => {
   const queryClient = useQueryClient();
@@ -10,21 +11,19 @@ export const ReceptionDashboard = () => {
   const { data: visitors } = useQuery({
     queryKey: ['visitors'],
     queryFn: async () => {
-      const res = await fetch('/api/operations/visitors', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      return res.json();
+      // const res = await fetch('/api/operations/visitors', ...);
+      // return res.json();
+      return SOVEREIGN_GENESIS_DATA.visitors;
     }
   });
 
   const addMutation = useMutation({
     mutationFn: async (data: any) => {
-      await fetch('/api/operations/visitors', { 
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify(data) 
-      });
+      // await fetch('/api/operations/visitors', ...);
+      console.log("[DEMO] Visitor Check-in:", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['visitors'] });
+      alert("Visitor Checked In (Mock)");
       setVisitor({ name: '', purpose: '' });
     }
   });

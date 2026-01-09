@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SovereignButton, SovereignSkeleton } from '../../components/SovereignComponents';
+import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
 
 export const HostelWarden = () => {
   const queryClient = useQueryClient();
@@ -10,22 +11,26 @@ export const HostelWarden = () => {
   const { data: rooms, isLoading } = useQuery({
     queryKey: ['rooms'],
     queryFn: async () => {
-      const res = await fetch('/api/logistics/rooms', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      return res.json();
+      // const res = await fetch('/api/logistics/rooms', ...);
+      // return res.json();
+      return SOVEREIGN_GENESIS_DATA.hostel.map(h => ({
+        id: h.roomNumber, // Mock ID
+        number: h.roomNumber,
+        block: h.gender === 'BOYS' ? 'Cauvery (Boys)' : 'Ganga (Girls)',
+        capacity: h.capacity,
+        occupied: h.occupied
+      }));
     }
   });
 
   const allocateMutation = useMutation({
     mutationFn: async ({ room, studentId }: { room: string, studentId: string }) => {
-      await fetch('/api/logistics/allocate-room', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ roomId: room, studentId })
-      });
+      // await fetch('/api/logistics/allocate-room', ...);
+      console.log("[DEMO] Allocate Room:", room, studentId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      alert("Allocated & Fee Generated");
+      // queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      alert("Allocated & Fee Generated (Mock)");
     }
   });
 

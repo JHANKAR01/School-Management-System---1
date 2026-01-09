@@ -3,48 +3,50 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { UserRole } from '../../../../types';
 import { SovereignButton, SovereignTable, SovereignInput, SovereignSkeleton } from '../../components/SovereignComponents';
+import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
 
 export const StaffManagement = () => {
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newStaff, setNewStaff] = useState({ name: '', username: '', role: UserRole.TEACHER, department: '' });
 
-  // 1. Fetch Staff from API
+  // 1. Fetch Staff from Genesis Data
   const { data: staff, isLoading } = useQuery({
     queryKey: ['staff'],
     queryFn: async () => {
-      const res = await fetch('/api/staff', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      // const res = await fetch('/api/staff', ...);
+      // return res.json();
+      return SOVEREIGN_GENESIS_DATA.staff.map(s => ({
+        id: s.id,
+        full_name: s.name,
+        role: s.role,
+        teacher_profile: { department: s.department }
+      }));
     }
   });
 
-  // 2. Hire Mutation (Create)
+  // 2. Hire Mutation (Mock)
   const hireMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await fetch('/api/staff', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify(data)
-      });
-      return res.json();
+      // await fetch('/api/staff', ...);
+      console.log("[DEMO] Hiring:", data);
+      return { success: true };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['staff'] });
+      // queryClient.invalidateQueries({ queryKey: ['staff'] });
+      alert("Staff Member Added (Mock)");
       setShowAddModal(false);
       setNewStaff({ name: '', username: '', role: UserRole.TEACHER, department: '' });
     }
   });
 
-  // 3. Fire Mutation (Revoke Access)
+  // 3. Fire Mutation (Mock)
   const fireMutation = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`/api/staff/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
+      // await fetch(`/api/staff/${id}`, ...);
+      console.log("[DEMO] Firing:", id);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['staff'] })
+    onSuccess: () => alert("Access Revoked (Mock)")
   });
 
   const handleHire = () => hireMutation.mutate(newStaff);

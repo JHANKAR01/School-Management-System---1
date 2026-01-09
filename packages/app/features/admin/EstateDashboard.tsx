@@ -2,26 +2,25 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SovereignTable, PageHeader, SovereignBadge } from '../../components/SovereignComponents';
+import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
 
 export const EstateDashboard = () => {
   const queryClient = useQueryClient();
   const { data: tickets } = useQuery({
     queryKey: ['tickets'],
     queryFn: async () => {
-      const res = await fetch('/api/operations/tickets', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      return res.json();
+      // const res = await fetch('/api/operations/tickets', ...);
+      // return res.json();
+      return SOVEREIGN_GENESIS_DATA.tickets;
     }
   });
 
   const resolveMutation = useMutation({
     mutationFn: async (id: string) => {
-      await fetch('/api/operations/tickets/resolve', { 
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ id })
-      });
+      // await fetch('/api/operations/tickets/resolve', ...);
+      console.log("[DEMO] Resolving Ticket:", id);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tickets'] })
+    onSuccess: () => alert("Ticket Resolved (Mock)")
   });
 
   const columns = [

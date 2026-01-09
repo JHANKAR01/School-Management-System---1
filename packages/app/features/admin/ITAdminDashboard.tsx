@@ -16,8 +16,8 @@ export const ITAdminDashboard = () => {
   const { data: health } = useQuery({
     queryKey: ['system-health'],
     queryFn: async () => {
-      const res = await fetch('/api/health', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      return res.json();
+      // DEMO MODE MOCK
+      return { status: 'OPERATIONAL', uptime: 345600 }; 
     }
   });
 

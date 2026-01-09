@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { SovereignTable, PageHeader, StatCard, SovereignBadge } from '../../components/SovereignComponents';
 import { HeartPulse, Brain, UserPlus } from 'lucide-react';
-import { Column } from '../../components/SovereignComponents'; // Assuming Column type is exported or inferred
+import { SOVEREIGN_GENESIS_DATA } from '../../../../api/src/data/dummy-data';
 
 interface CounselorNote {
   id: number | string;
@@ -12,19 +13,13 @@ interface CounselorNote {
   note: string;
 }
 
-// Helper for type-safe columns
-type TableColumn = {
-  header: string;
-  accessor: keyof CounselorNote | ((item: CounselorNote) => React.ReactNode);
-  className?: string;
-};
-
 export const CounselorDashboard = () => {
   const { data: notes } = useQuery<CounselorNote[]>({
     queryKey: ['counselor-notes'],
     queryFn: async () => {
-      const res = await fetch('/api/health/counselor/notes', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      return res.json();
+      // const res = await fetch('/api/health/counselor/notes', ...);
+      // return res.json();
+      return SOVEREIGN_GENESIS_DATA.counseling;
     }
   });
 

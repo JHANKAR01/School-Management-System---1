@@ -4,14 +4,19 @@ import { useQuery } from '@tanstack/react-query';
 import { SovereignTable, PageHeader, StatCard, SovereignBadge } from '../../components/SovereignComponents';
 import { Calendar, Users, AlertTriangle } from 'lucide-react';
 
+const MOCK_SUBSTITUTIONS = [
+    { id: 1, absentTeacher: 'Mrs. R. Iyer', period: 3, class: 'VIII-B', subject: 'History', assignedTo: 'Mr. T. Das (Free)' },
+    { id: 2, absentTeacher: 'Mr. P. Singh', period: 5, class: 'X-A', subject: 'PT', assignedTo: 'Library' },
+    { id: 3, absentTeacher: 'Ms. K. Sharma', period: 1, class: 'XII-Sci', subject: 'Physics', assignedTo: 'Self Study' },
+];
+
 export const VicePrincipalDashboard = () => {
   const { data: substitutions, isLoading } = useQuery({
     queryKey: ['substitutions'],
     queryFn: async () => {
-      const res = await fetch('/api/academics/substitutions', { 
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } 
-      });
-      return res.json();
+      // const res = await fetch('/api/academics/substitutions', ...);
+      // return res.json();
+      return MOCK_SUBSTITUTIONS;
     }
   });
 
@@ -28,7 +33,7 @@ export const VicePrincipalDashboard = () => {
       <PageHeader title="Vice Principal Operations" subtitle="Daily Academic Logistics" />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Staff on Leave" value="4" icon={<Users className="w-5 h-5"/>} trend={{ value: 2, isPositive: false }} />
+        <StatCard title="Staff on Leave" value="3" icon={<Users className="w-5 h-5"/>} trend={{ value: 2, isPositive: false }} />
         <StatCard title="Free Periods" value="12" icon={<Calendar className="w-5 h-5"/>} subtitle="Available for Sub" />
         <StatCard title="Critical Gaps" value="0" icon={<AlertTriangle className="w-5 h-5"/>} subtitle="All classes covered" />
       </div>
