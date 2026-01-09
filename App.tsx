@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import LoginScreen from './apps/expo/app/login';
 import SuperAdminOnboarding from './apps/next/pages/super-admin/onboarding.tsx';
 import { SchoolConfig, UserRole, LanguageCode, User, AuthResponse } from './types';
-import { Dashboard } from './components/Dashboard'; // Admin Dashboard
-import { TeacherDashboard } from './packages/app/features/dashboard/TeacherDashboard';
-import { ParentDashboard } from './packages/app/features/dashboard/ParentDashboard';
+import { RoleBasedRouter } from './packages/app/features/dashboard/RoleBasedRouter';
 import { Sidebar } from './components/Sidebar';
 import { LanguageProvider, useTranslation } from './packages/app/provider/language-context';
 import { useLowDataMode } from './packages/app/hooks/useLowDataMode';
@@ -19,16 +17,27 @@ const MainLayout: React.FC<{
   const { language, setLanguage, t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
-  // Set default module based on role
+  // Initialize default module based on role
   const getDefaultModule = () => {
     switch(user.role) {
+      case UserRole.SCHOOL_ADMIN: return 'STAFF_MGMT';
+      case UserRole.PRINCIPAL: return 'OVERVIEW';
+      case UserRole.FINANCE_MANAGER: return 'COLLECTIONS';
+      case UserRole.FLEET_MANAGER: return 'LIVE_TRACKING';
+      case UserRole.LIBRARIAN: return 'CIRCULATION';
+      case UserRole.WARDEN: return 'ALLOCATION';
       case UserRole.TEACHER: return 'ATTENDANCE';
       case UserRole.PARENT: return 'FEES';
-      default: return 'DASHBOARD';
+      default: return 'HOME';
     }
   };
 
   const [activeModule, setActiveModule] = useState(getDefaultModule());
+
+  // Reset module when user role changes (if hot-swapping users)
+  useEffect(() => {
+    setActiveModule(getDefaultModule());
+  }, [user.role]);
 
   // Dynamic Theme Injection
   useEffect(() => {
@@ -87,15 +96,11 @@ const MainLayout: React.FC<{
 
         {/* Dashboard Switcher */}
         <main className="flex-1 overflow-auto bg-gray-50 relative">
-          {user.role === UserRole.SCHOOL_ADMIN && (
-            <Dashboard school={school} activeModule={activeModule} />
-          )}
-          {user.role === UserRole.TEACHER && (
-            <TeacherDashboard school={school} activeModule={activeModule} />
-          )}
-          {user.role === UserRole.PARENT && (
-            <ParentDashboard school={school} activeModule={activeModule} />
-          )}
+          <RoleBasedRouter 
+            role={user.role} 
+            school={school} 
+            activeModule={activeModule} 
+          />
         </main>
       </div>
     </div>
@@ -116,7 +121,7 @@ const App: React.FC = () => {
     setCurrentSchool(null);
   };
 
-  // 1. Super Admin View (No School Context needed strictly, but simplified for flow)
+  // 1. Super Admin View
   if (currentUser?.role === UserRole.SUPER_ADMIN) {
     return (
       <div className="relative">

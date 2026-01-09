@@ -1,12 +1,15 @@
 export enum UserRole {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  SCHOOL_ADMIN = 'SCHOOL_ADMIN',
-  TEACHER = 'TEACHER',
-  ACCOUNTANT = 'ACCOUNTANT',
+  SUPER_ADMIN = 'SUPER_ADMIN',      // Platform Owner
+  SCHOOL_ADMIN = 'SCHOOL_ADMIN',    // HR & Access Control (HR Manager)
+  PRINCIPAL = 'PRINCIPAL',          // Academic Head (Results, Timetables)
+  FINANCE_MANAGER = 'FINANCE_MANAGER', // Accountant (Fees, Payroll)
+  FLEET_MANAGER = 'FLEET_MANAGER',  // Transport Head
+  LIBRARIAN = 'LIBRARIAN',          // Library Head
+  WARDEN = 'WARDEN',                // Hostel Head
+  TEACHER = 'TEACHER',              // Classroom Staff
+  ACCOUNTANT = 'ACCOUNTANT',        // Junior Finance Staff
   PARENT = 'PARENT',
-  STUDENT = 'STUDENT',
-  WARDEN = 'WARDEN',
-  LIBRARIAN = 'LIBRARIAN'
+  STUDENT = 'STUDENT'
 }
 
 export type LanguageCode = 'en' | 'hi' | 'mr';
@@ -16,6 +19,7 @@ export interface User {
   name: string;
   role: UserRole;
   school_id: string;
+  department?: string; // e.g., "Mathematics", "Transport"
 }
 
 export interface AuthResponse {

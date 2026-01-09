@@ -59,7 +59,7 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
       const schoolConfig = MOCK_SCHOOL_DB[schoolPrefix];
 
       if (!schoolConfig) {
-        setError('School not found. Try "demo.admin", "demo.teacher", or "demo.parent"');
+        setError('School not found. Try "demo.admin" or "demo.finance"');
         setLoading(false);
         return;
       }
@@ -71,7 +71,27 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
       switch (roleSuffix) {
         case 'admin':
           userRole = UserRole.SCHOOL_ADMIN;
+          userName = 'HR Manager';
+          break;
+        case 'principal':
+          userRole = UserRole.PRINCIPAL;
           userName = 'Principal Sharma';
+          break;
+        case 'finance':
+          userRole = UserRole.FINANCE_MANAGER;
+          userName = 'Mr. Accountant';
+          break;
+        case 'fleet':
+          userRole = UserRole.FLEET_MANAGER;
+          userName = 'Transport Head';
+          break;
+        case 'librarian':
+          userRole = UserRole.LIBRARIAN;
+          userName = 'Mrs. Reader';
+          break;
+        case 'warden':
+          userRole = UserRole.WARDEN;
+          userName = 'Hostel Warden';
           break;
         case 'teacher':
           userRole = UserRole.TEACHER;
@@ -86,7 +106,7 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
           userName = 'System Root';
           break;
         default:
-          setError('Invalid Role. Use .admin, .teacher, or .parent suffix.');
+          setError('Invalid Role. Try .admin, .principal, .finance, .fleet, .librarian');
           setLoading(false);
           return;
       }
@@ -124,7 +144,7 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
                 type="text"
                 required
                 className="relative block w-full rounded-t-md border-0 py-3 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="demo.admin / demo.teacher / demo.parent"
+                placeholder="demo.admin / demo.finance / demo.fleet"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -163,14 +183,16 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
         
         <div className="text-center space-y-2">
            <div className="text-[10px] text-gray-400">
-             Quick Test Credentials:
+             Quick Test Credentials (prefix 'demo.'):
            </div>
-           <div className="flex justify-center gap-2 text-xs font-mono text-indigo-600">
-             <button onClick={() => setUsername('demo.admin')} className="hover:underline">Admin</button>
+           <div className="flex flex-wrap justify-center gap-2 text-xs font-mono text-indigo-600">
+             <button onClick={() => setUsername('demo.admin')} className="hover:underline">Admin (HR)</button>
              <span>|</span>
-             <button onClick={() => setUsername('demo.teacher')} className="hover:underline">Teacher</button>
+             <button onClick={() => setUsername('demo.principal')} className="hover:underline">Principal</button>
              <span>|</span>
-             <button onClick={() => setUsername('demo.parent')} className="hover:underline">Parent</button>
+             <button onClick={() => setUsername('demo.finance')} className="hover:underline">Finance</button>
+             <span>|</span>
+             <button onClick={() => setUsername('demo.fleet')} className="hover:underline">Fleet</button>
            </div>
         </div>
       </div>
