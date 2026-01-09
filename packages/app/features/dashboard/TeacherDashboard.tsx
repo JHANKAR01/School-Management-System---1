@@ -4,8 +4,9 @@ import { SchoolConfig } from '../../../../types';
 import { AttendanceModule } from '../../../../components/AttendanceModule';
 import { Gradebook } from '../academics/Gradebook';
 import { LibraryManagement } from '../library/LibraryManagement';
-import { StatCard, PageHeader } from '../../components/SovereignComponents';
-import { Users, BookOpen, Clock, AlertCircle } from 'lucide-react';
+import { StatCard, PageHeader, SovereignButton } from '../../components/SovereignComponents';
+import { Users, BookOpen, Clock, AlertCircle, MapPin } from 'lucide-react';
+import { useGeofencing } from '../../../../hooks/useGeofencing';
 
 interface Props {
   school: SchoolConfig;
@@ -13,12 +14,46 @@ interface Props {
 }
 
 export const TeacherDashboard: React.FC<Props> = ({ school, activeModule }) => {
+  const { isWithinFence, isMockLocation, loading: geoLoading } = useGeofencing(school.location);
+  const [checkedIn, setCheckedIn] = React.useState(false);
+
+  const handleStaffCheckIn = () => {
+    if (isMockLocation) {
+      alert("Security Alert: Mock Location Detected. Check-in denied.");
+      return;
+    }
+    if (!isWithinFence) {
+      alert("You are outside the school campus. Please enter the gate to check in.");
+      return;
+    }
+    setCheckedIn(true);
+    alert("Checked in successfully at " + new Date().toLocaleTimeString());
+  };
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      <PageHeader 
-        title="Classroom Management" 
-        subtitle="Class X-A • Mathematics"
-      />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+        <PageHeader 
+          title="Classroom Management" 
+          subtitle="Class X-A • Mathematics"
+        />
+        
+        {/* Smart Check-In Widget */}
+        <div className="bg-white p-2 rounded-lg border shadow-sm flex items-center gap-3">
+          <div className={`w-3 h-3 rounded-full ${isWithinFence ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+          <div className="text-xs">
+             <p className="font-bold text-gray-700">{geoLoading ? 'Locating...' : (isWithinFence ? 'Inside Campus' : 'Outside Campus')}</p>
+             <p className="text-[10px] text-gray-400">{isMockLocation ? '⚠️ GPS Spoofed' : 'GPS Verified'}</p>
+          </div>
+          <SovereignButton 
+            onClick={handleStaffCheckIn} 
+            disabled={checkedIn || !isWithinFence || isMockLocation}
+            className={`text-xs px-3 py-1.5 h-auto ${checkedIn ? 'bg-green-100 text-green-800 border-green-200' : ''}`}
+          >
+            {checkedIn ? 'On Duty' : 'Staff Check-In'}
+          </SovereignButton>
+        </div>
+      </div>
 
       {/* KPI GRID */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">

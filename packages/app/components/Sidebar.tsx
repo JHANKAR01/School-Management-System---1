@@ -28,113 +28,108 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose
 }) => {
   const { isLowData } = useLowDataMode();
+  const { features } = school;
   
-  // Strict Departmental Isolation Logic
+  // Strict Departmental Isolation Logic + Feature Flags
   const getMenuItems = (): MenuItem[] => {
+    let items: MenuItem[] = [];
+
     switch(role) {
       case UserRole.SCHOOL_ADMIN: // HR Manager
-        return [
+        items = [
           { id: 'STAFF_MGMT', label: 'Staff & HR', icon: '👥' },
           { id: 'ACCESS_LOGS', label: 'Audit Logs', icon: '🛡️' },
           { id: 'SETTINGS', label: 'School Settings', icon: '⚙️' },
         ];
+        break;
       
       case UserRole.PRINCIPAL: // Academic Head
-        return [
+        items = [
           { id: 'OVERVIEW', label: 'School Overview', icon: '📊' },
           { id: 'CLASSROOMS', label: 'Classrooms', icon: '🏫' },
           { id: 'RESULTS', label: 'Publish Results', icon: '📢' },
-          { id: 'ATTENDANCE_REP', label: 'Attendance Reports', icon: '📋' },
         ];
+        if (features.attendance) items.push({ id: 'ATTENDANCE_REP', label: 'Attendance Reports', icon: '📋' });
+        break;
 
       case UserRole.FINANCE_MANAGER: // Accountant
-        return [
-          { id: 'COLLECTIONS', label: 'Fee Collections', icon: '💰' },
-          { id: 'RECONCILIATION', label: 'Bank Reconcile', icon: '🏦' },
-          { id: 'PAYROLL', label: 'Staff Payroll', icon: '💸' },
-        ];
+        if (features.fees) {
+          items = [
+            { id: 'COLLECTIONS', label: 'Fee Collections', icon: '💰' },
+            { id: 'RECONCILIATION', label: 'Bank Reconcile', icon: '🏦' },
+            { id: 'PAYROLL', label: 'Staff Payroll', icon: '💸' },
+          ];
+        }
+        break;
       
       case UserRole.TEACHER: 
-         return [
-            { id: 'ATTENDANCE', label: 'Attendance', icon: '📋' },
-            { id: 'GRADEBOOK', label: 'Gradebook', icon: '📝' },
-            { id: 'LIBRARY', label: 'Library', icon: '📚' },
-         ];
+         if (features.attendance) items.push({ id: 'ATTENDANCE', label: 'Attendance', icon: '📋' });
+         items.push({ id: 'GRADEBOOK', label: 'Gradebook', icon: '📝' });
+         if (features.library) items.push({ id: 'LIBRARY', label: 'Library', icon: '📚' });
+         break;
 
       case UserRole.PARENT:
       case UserRole.STUDENT:
-         return [
-            { id: 'FEES', label: 'Fees & Dues', icon: '💳' },
-            { id: 'TRACKING', label: 'Bus Tracking', icon: '🚌' },
-            { id: 'REPORT', label: 'Report Card', icon: '📄' },
-         ];
+         if (features.fees) items.push({ id: 'FEES', label: 'Fees & Dues', icon: '💳' });
+         if (features.transport) items.push({ id: 'TRACKING', label: 'Bus Tracking', icon: '🚌' });
+         items.push({ id: 'REPORT', label: 'Report Card', icon: '📄' });
+         break;
 
       case UserRole.FLEET_MANAGER:
-          return [
-            { id: 'FLEET', label: 'Live Tracking', icon: '🚌' }
-          ];
+          if (features.transport) items.push({ id: 'FLEET', label: 'Live Tracking', icon: '🚌' });
+          break;
 
       case UserRole.LIBRARIAN:
-          return [
-            { id: 'LIBRARY', label: 'Circulation Desk', icon: '📚' }
-          ];
+          if (features.library) items.push({ id: 'LIBRARY', label: 'Circulation Desk', icon: '📚' });
+          break;
 
       case UserRole.WARDEN:
-          return [
-            { id: 'HOSTEL', label: 'Room Allocation', icon: '🛏️' }
-          ];
+          if (features.hostel) items.push({ id: 'HOSTEL', label: 'Room Allocation', icon: '🛏️' });
+          break;
 
       case UserRole.NURSE:
-          return [
-            { id: 'INFIRMARY', label: 'Health Logs', icon: '🏥' }
-          ];
+          items.push({ id: 'INFIRMARY', label: 'Health Logs', icon: '🏥' });
+          break;
 
       case UserRole.SECURITY_HEAD:
-          return [
-            { id: 'GATE', label: 'Gate Logs', icon: '🛡️' }
-          ];
+          items.push({ id: 'GATE', label: 'Gate Logs', icon: '🛡️' });
+          break;
 
       case UserRole.ESTATE_MANAGER:
-          return [
-            { id: 'TICKETS', label: 'Maintenance', icon: '🔧' }
-          ];
+          items.push({ id: 'TICKETS', label: 'Maintenance', icon: '🔧' });
+          break;
 
       case UserRole.RECEPTIONIST:
-          return [
-            { id: 'VISITORS', label: 'Front Desk', icon: '🛎️' }
-          ];
+          items.push({ id: 'VISITORS', label: 'Front Desk', icon: '🛎️' });
+          break;
 
       case UserRole.ADMISSIONS_OFFICER:
-          return [
-            { id: 'INQUIRIES', label: 'CRM', icon: '🤝' }
-          ];
+          items.push({ id: 'INQUIRIES', label: 'CRM', icon: '🤝' });
+          break;
 
       case UserRole.HOD:
-          return [
-            { id: 'SYLLABUS', label: 'Dept. Progress', icon: '📈' }
-          ];
+          items.push({ id: 'SYLLABUS', label: 'Dept. Progress', icon: '📈' });
+          break;
       
       case UserRole.EXAM_CELL:
-          return [
-            { id: 'EXAMS', label: 'Papers & Logistics', icon: '🖨️' }
-          ];
+          items.push({ id: 'EXAMS', label: 'Papers & Logistics', icon: '🖨️' });
+          break;
 
       case UserRole.COUNSELOR:
-          return [
-            { id: 'WELLNESS', label: 'Student Wellness', icon: '🧠' }
-          ];
+          items.push({ id: 'WELLNESS', label: 'Student Wellness', icon: '🧠' });
+          break;
 
       case UserRole.IT_ADMIN:
-          return [
-            { id: 'SYSTEM', label: 'Infrastructure', icon: '🖥️' }
-          ];
+          items.push({ id: 'SYSTEM', label: 'Infrastructure', icon: '🖥️' });
+          break;
       
       default:
-        return [
+        items = [
           { id: 'HOME', label: 'Home', icon: '🏠' },
           { id: 'PROFILE', label: 'My Profile', icon: '👤' },
         ];
     }
+    return items;
   };
 
   const menuItems = getMenuItems();

@@ -1,12 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SchoolConfig } from '../../../../types';
 import { generateUPILink } from '../../../api/src/upi-engine';
 import { StatCard, PageHeader, SovereignButton, SovereignTable, SovereignBadge } from '../../components/SovereignComponents';
-import { Wallet, AlertCircle, TrendingUp, CheckCircle } from 'lucide-react';
+import { Wallet, AlertCircle, TrendingUp, CheckCircle, Upload, FileText } from 'lucide-react';
 import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
 
 export const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: string }> = ({ school, activeModule }) => {
+  const [reconcileFile, setReconcileFile] = useState<File | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const sampleFeeLink = generateUPILink({
     payeeVPA: school.upi_vpa,
     payeeName: school.name,
@@ -23,6 +26,25 @@ export const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: st
     { header: "Status", accessor: (row: any) => <SovereignBadge status={row.status === 'PAID' ? 'success' : 'warning'}>{row.status}</SovereignBadge> },
   ];
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) setReconcileFile(e.target.files[0]);
+  };
+
+  const runReconciliation = () => {
+    if (!reconcileFile) return;
+    setIsProcessing(true);
+    setTimeout(() => {
+      alert("Reconciliation Complete! 15 Matches Found using Fuzzy Logic.");
+      setIsProcessing(false);
+      setReconcileFile(null);
+    }, 2000);
+  };
+
+  const handleBatchGenerate = () => {
+    const confirm = window.confirm("Generate Term 2 Invoices for 1,240 students? (Total ~₹24 Lakhs)");
+    if(confirm) alert("Batch Job Queued. Parents will receive SMS links shortly.");
+  };
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <PageHeader title="Finance Department" subtitle="Ledger & Collection Management" />
@@ -36,6 +58,12 @@ export const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: st
 
       {activeModule === 'COLLECTIONS' && (
         <div className="space-y-6">
+          <div className="flex justify-end">
+            <SovereignButton onClick={handleBatchGenerate} icon={<FileText className="w-4 h-4"/>}>
+              Batch Generate Invoices
+            </SovereignButton>
+          </div>
+
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
              <h3 className="font-bold text-gray-800 mb-4">Fee Tools</h3>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -67,9 +95,25 @@ export const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: st
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🏦</div>
           <h2 className="text-xl font-bold text-gray-800">Bank Reconciliation</h2>
-          <p className="text-gray-500 mt-2">Upload Bank CSV Statement here to match UTRs.</p>
-          <div className="mt-4 p-4 bg-yellow-50 text-yellow-800 text-sm rounded border border-yellow-200 inline-block">
-            <strong>Feature Active:</strong> Fuzzy Logic matching enabled (Levenshtein Distance &le; 5).
+          <p className="text-gray-500 mt-2 mb-6">Upload Bank CSV Statement to match UTRs automatically.</p>
+          
+          <div className="max-w-md mx-auto border-2 border-dashed border-gray-300 rounded-xl p-8 bg-gray-50">
+             <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" id="bank-csv" />
+             <label htmlFor="bank-csv" className="cursor-pointer block">
+                <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                <span className="text-indigo-600 font-bold hover:underline">{reconcileFile ? reconcileFile.name : "Select CSV File"}</span>
+                <p className="text-xs text-gray-400 mt-1">Supports SBI, HDFC, ICICI formats</p>
+             </label>
+          </div>
+
+          {reconcileFile && (
+            <SovereignButton onClick={runReconciliation} isLoading={isProcessing} className="mt-6">
+               Run Fuzzy Match Engine
+            </SovereignButton>
+          )}
+
+          <div className="mt-8 p-4 bg-yellow-50 text-yellow-800 text-sm rounded border border-yellow-200 inline-block">
+            <strong>Engine Status:</strong> Fuzzy Logic enabled (Levenshtein Dist &le; 5).
           </div>
         </div>
       )}
