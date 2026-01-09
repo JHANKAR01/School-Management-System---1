@@ -8,7 +8,13 @@ const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
     name: 'Sovereign High School',
     logo_url: 'https://picsum.photos/200',
     primary_color: '#059669', // Emerald Green
-    features: { attendance: true, fees: true, transport: true },
+    features: { 
+      attendance: true, 
+      fees: true, 
+      transport: true, 
+      library: true, 
+      hostel: true 
+    },
     location: { lat: 28.6139, lng: 77.2090 }, // New Delhi
     upi_vpa: 'school@upi'
   },
@@ -17,7 +23,13 @@ const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
     name: 'DAV Public School',
     logo_url: '',
     primary_color: '#DC2626', // Red
-    features: { attendance: true, fees: false, transport: false },
+    features: { 
+      attendance: true, 
+      fees: false, 
+      transport: false, 
+      library: true, 
+      hostel: false 
+    },
     location: { lat: 19.0760, lng: 72.8777 }, // Mumbai
     upi_vpa: 'dav@upi'
   }

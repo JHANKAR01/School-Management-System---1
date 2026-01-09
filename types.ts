@@ -4,7 +4,9 @@ export enum UserRole {
   TEACHER = 'TEACHER',
   ACCOUNTANT = 'ACCOUNTANT',
   PARENT = 'PARENT',
-  STUDENT = 'STUDENT'
+  STUDENT = 'STUDENT',
+  WARDEN = 'WARDEN',
+  LIBRARIAN = 'LIBRARIAN'
 }
 
 export interface SchoolConfig {
@@ -16,6 +18,8 @@ export interface SchoolConfig {
     attendance: boolean;
     fees: boolean;
     transport: boolean;
+    library: boolean;
+    hostel: boolean;
   };
   location: {
     lat: number;
@@ -100,4 +104,32 @@ export interface BusLocation {
   lng: number;
   speed: number;
   timestamp: number;
+}
+
+export interface Bus {
+  id: string;
+  plateNumber: string;
+  driverName: string;
+  capacity: number;
+  routeId: string;
+  insuranceExpiry: string;
+}
+
+// --- LIBRARY ---
+export interface Book {
+  isbn: string;
+  title: string;
+  author: string;
+  status: 'AVAILABLE' | 'ISSUED';
+  dueDate?: string;
+  issuedTo?: string; // Student ID
+}
+
+// --- HOSTEL ---
+export interface HostelRoom {
+  roomNumber: string;
+  capacity: number;
+  occupied: number;
+  gender: 'BOYS' | 'GIRLS';
+  students: string[]; // List of Student IDs
 }
