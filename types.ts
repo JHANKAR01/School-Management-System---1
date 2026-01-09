@@ -31,3 +31,36 @@ export interface AttendanceRecord {
   status: 'PRESENT' | 'ABSENT' | 'LATE';
   synced: boolean;
 }
+
+// --- ACADEMICS ---
+export interface ExamComponent {
+  id: string;
+  name: string; // e.g., "Unit Test 1"
+  maxMarks: number;
+  weightage: number; // Percentage (0-100)
+}
+
+export interface StudentResult {
+  studentId: string;
+  studentName: string;
+  marks: Record<string, number>; // examComponentId -> marksObtained
+}
+
+// --- FINANCE ---
+export interface Invoice {
+  id: string;
+  studentId: string;
+  amount: number;
+  description: string;
+  dueDate: string;
+  status: 'PENDING' | 'VERIFIED' | 'PAID';
+  utr?: string; // User submitted UTR
+}
+
+export interface BankTransaction {
+  date: string;
+  description: string;
+  amount: number;
+  type: 'CR' | 'DR';
+  refNo: string; // Extracted UTR from bank statement
+}
