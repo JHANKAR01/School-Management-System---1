@@ -64,3 +64,40 @@ export interface BankTransaction {
   type: 'CR' | 'DR';
   refNo: string; // Extracted UTR from bank statement
 }
+
+// --- HR & PAYROLL ---
+export interface Employee {
+  id: string;
+  name: string;
+  role: UserRole;
+  basicSalary: number;
+  allowances: number;
+  pfEnabled: boolean;
+  esiEnabled: boolean;
+}
+
+export interface SalarySlip {
+  employeeId: string;
+  month: string;
+  totalDays: number;
+  workingDays: number;
+  leaveDays: number; // LOP
+  basicPay: number;
+  allowances: number;
+  deductions: {
+    pf: number;
+    esi: number;
+    lop: number; // Loss of Pay
+    tax: number;
+  };
+  netSalary: number;
+}
+
+// --- TRANSPORT ---
+export interface BusLocation {
+  busId: string;
+  lat: number;
+  lng: number;
+  speed: number;
+  timestamp: number;
+}
