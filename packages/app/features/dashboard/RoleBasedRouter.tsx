@@ -89,6 +89,17 @@ const PrincipalDashboard: React.FC<{ activeModule: string }> = ({ activeModule }
   );
 };
 
+const PlaceholderDashboard: React.FC<{ title: string, subtitle: string }> = ({ title, subtitle }) => (
+  <div className="p-8 flex flex-col items-center justify-center min-h-[500px] text-center">
+    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4 text-3xl">🚧</div>
+    <h1 className="text-2xl font-bold text-gray-800 mb-2">{title}</h1>
+    <p className="text-gray-500 max-w-md">{subtitle}</p>
+    <div className="mt-6 px-4 py-2 bg-yellow-50 text-yellow-800 text-xs font-bold rounded border border-yellow-200">
+      Feature Flag: COMING_SOON
+    </div>
+  </div>
+);
+
 // --- MAIN ROUTER ---
 
 export const RoleBasedRouter: React.FC<Props> = ({ role, school, activeModule }) => {
@@ -155,6 +166,28 @@ export const RoleBasedRouter: React.FC<Props> = ({ role, school, activeModule })
 
     case UserRole.PARENT:
       return <ParentDashboard school={school} activeModule={activeModule} />;
+      
+    case UserRole.STUDENT:
+      return <ParentDashboard school={school} activeModule={activeModule} />; // Using Parent Dashboard for Student View for MVP
+
+    // --- NEW ROLES (Placeholders) ---
+    case UserRole.HOD:
+      return <PlaceholderDashboard title="Head of Department Portal" subtitle="Syllabus tracking and lesson plan approval workflows." />;
+      
+    case UserRole.COUNSELOR:
+      return <PlaceholderDashboard title="Counseling & Wellness" subtitle="Private session logs, behavioral tracking, and special education IEPs." />;
+      
+    case UserRole.RECEPTIONIST:
+      return <PlaceholderDashboard title="Front Desk" subtitle="Visitor management logs, appointment scheduling, and phone inquiry CRM." />;
+      
+    case UserRole.SECURITY_HEAD:
+      return <PlaceholderDashboard title="Security Command Center" subtitle="Gate entry/exit logs, staff shift management, and emergency broadcast system." />;
+      
+    case UserRole.ESTATE_MANAGER:
+      return <PlaceholderDashboard title="Estate & Maintenance" subtitle="Asset repair ticketing system, utility bill tracking, and vendor management." />;
+      
+    case UserRole.IT_ADMIN:
+      return <PlaceholderDashboard title="IT Administration" subtitle="System health monitoring, biometric device sync status, and hardware inventory." />;
 
     default:
       return (

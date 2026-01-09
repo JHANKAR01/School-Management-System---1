@@ -20,10 +20,13 @@ const MainLayout: React.FC<{
   // Initialize default module based on role
   const getDefaultModule = () => {
     switch(user.role) {
+      // Management
       case UserRole.SCHOOL_ADMIN: return 'STAFF_MGMT';
       case UserRole.PRINCIPAL: return 'OVERVIEW';
       case UserRole.VICE_PRINCIPAL: return 'TIMETABLES';
       case UserRole.FINANCE_MANAGER: return 'COLLECTIONS';
+      
+      // Operations
       case UserRole.FLEET_MANAGER: return 'LIVE_TRACKING';
       case UserRole.LIBRARIAN: return 'CIRCULATION';
       case UserRole.WARDEN: return 'ALLOCATION';
@@ -31,8 +34,18 @@ const MainLayout: React.FC<{
       case UserRole.NURSE: return 'MEDICAL_LOGS';
       case UserRole.INVENTORY_MANAGER: return 'STOCK_REGISTRY';
       case UserRole.EXAM_CELL: return 'EXAM_SCHEDULE';
+      case UserRole.RECEPTIONIST: return 'VISITOR_LOGS';
+      case UserRole.SECURITY_HEAD: return 'GATE_MGMT';
+      case UserRole.ESTATE_MANAGER: return 'MAINTENANCE_TICKETS';
+      case UserRole.IT_ADMIN: return 'SYSTEM_HEALTH';
+      
+      // Staff & Users
       case UserRole.TEACHER: return 'ATTENDANCE';
+      case UserRole.HOD: return 'SYLLABUS';
+      case UserRole.COUNSELOR: return 'STUDENT_WELLNESS';
       case UserRole.PARENT: return 'FEES';
+      case UserRole.STUDENT: return 'TIMETABLE';
+      
       default: return 'HOME';
     }
   };

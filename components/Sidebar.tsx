@@ -49,6 +49,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'SUBSTITUTIONS', label: 'Substitutions', icon: '🔄' },
           { id: 'SYLLABUS', label: 'Syllabus Tracker', icon: '📉' },
         ];
+        
+      case UserRole.HOD: // Head of Department
+        return [
+          { id: 'SYLLABUS', label: 'Syllabus Tracker', icon: '📉' },
+          { id: 'LESSON_PLANS', label: 'Lesson Plans', icon: '📝' },
+          { id: 'RESOURCES', label: 'Subject Resources', icon: '📂' },
+        ];
 
       case UserRole.FINANCE_MANAGER: // Accountant
         return [
@@ -99,6 +106,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'STOCK_REGISTRY', label: 'Stock Registry', icon: '📦' },
           { id: 'REQUISITIONS', label: 'Staff Requests', icon: '📋' },
         ];
+        
+      case UserRole.RECEPTIONIST:
+        return [
+          { id: 'VISITOR_LOGS', label: 'Visitor Logs', icon: '📖' },
+          { id: 'APPOINTMENTS', label: 'Appointments', icon: '📅' },
+          { id: 'PHONE_INQUIRIES', label: 'Phone Inquiries', icon: '📞' },
+        ];
+        
+      case UserRole.IT_ADMIN:
+        return [
+          { id: 'SYSTEM_HEALTH', label: 'System Health', icon: '🖥️' },
+          { id: 'BIOMETRIC_LOGS', label: 'Biometric Logs', icon: '👆' },
+          { id: 'DEVICE_MGMT', label: 'Device Mgmt', icon: '📟' },
+        ];
+
+      case UserRole.SECURITY_HEAD:
+        return [
+          { id: 'GATE_MGMT', label: 'Gate Management', icon: '🚧' },
+          { id: 'STAFF_SHIFTS', label: 'Staff Shifts', icon: '👮' },
+          { id: 'EMERGENCY_ALERTS', label: 'Emergency Alerts', icon: '🚨' },
+        ];
+
+      case UserRole.ESTATE_MANAGER:
+        return [
+          { id: 'MAINTENANCE_TICKETS', label: 'Maintenance Tickets', icon: '🔧' },
+          { id: 'ASSET_REPAIRS', label: 'Asset Repairs', icon: '🏗️' },
+          { id: 'UTILITY_BILLS', label: 'Utility Bills', icon: '💡' },
+        ];
+
+      case UserRole.COUNSELOR:
+        return [
+          { id: 'STUDENT_WELLNESS', label: 'Student Wellness', icon: '🧠' },
+          { id: 'BEHAVIORAL_LOGS', label: 'Behavioral Logs', icon: '📓' },
+          { id: 'PRIVATE_SESSIONS', label: 'Private Sessions', icon: '🛋️' },
+        ];
 
       case UserRole.TEACHER:
         return [
@@ -112,6 +154,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           { id: 'FEES', label: 'Pay Fees', icon: '💳' },
           { id: 'TRACKING', label: 'Bus Tracking', icon: '📍' },
           { id: 'REPORT', label: 'Report Card', icon: '📜' },
+        ];
+      
+      case UserRole.STUDENT:
+        return [
+           { id: 'TIMETABLE', label: 'My Timetable', icon: '📅' },
+           { id: 'HOMEWORK', label: 'Homework', icon: '🏠' },
+           { id: 'REPORT', label: 'Report Card', icon: '📜' },
         ];
 
       default:
@@ -146,7 +195,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Menu Items */}
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 overflow-y-auto max-h-[calc(100vh-140px)]">
           {menuItems.map((item) => {
             const isActive = activeModule === item.id;
             return (
@@ -171,7 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* User Footer */}
-        <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 bg-gray-50">
+        <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 bg-gray-50 bg-white">
           <div className="flex items-center gap-3">
              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold">
                {role[0]}

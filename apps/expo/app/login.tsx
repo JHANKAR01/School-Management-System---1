@@ -69,6 +69,11 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
       let userName = 'Student';
 
       switch (roleSuffix) {
+        // --- MANAGEMENT ---
+        case 'super':
+          userRole = UserRole.SUPER_ADMIN;
+          userName = 'System Root';
+          break;
         case 'admin':
           userRole = UserRole.SCHOOL_ADMIN;
           userName = 'HR Manager';
@@ -77,10 +82,16 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
           userRole = UserRole.PRINCIPAL;
           userName = 'Principal Sharma';
           break;
+        case 'vice_principal':
+          userRole = UserRole.VICE_PRINCIPAL;
+          userName = 'Vice Principal Rao';
+          break;
         case 'finance':
           userRole = UserRole.FINANCE_MANAGER;
           userName = 'Mr. Accountant';
           break;
+
+        // --- OPERATIONS ---
         case 'fleet':
           userRole = UserRole.FLEET_MANAGER;
           userName = 'Transport Head';
@@ -109,20 +120,47 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
           userRole = UserRole.EXAM_CELL;
           userName = 'Exam Controller';
           break;
+        case 'it':
+          userRole = UserRole.IT_ADMIN;
+          userName = 'System Admin';
+          break;
+        case 'security':
+          userRole = UserRole.SECURITY_HEAD;
+          userName = 'Chief Security Officer';
+          break;
+        case 'estate':
+          userRole = UserRole.ESTATE_MANAGER;
+          userName = 'Maintenance Head';
+          break;
+        
+        // --- STAFF & USERS ---
         case 'teacher':
           userRole = UserRole.TEACHER;
           userName = 'Radha Miss';
+          break;
+        case 'hod':
+          userRole = UserRole.HOD;
+          userName = 'HOD Science';
+          break;
+        case 'counselor':
+          userRole = UserRole.COUNSELOR;
+          userName = 'School Counselor';
+          break;
+        case 'receptionist':
+          userRole = UserRole.RECEPTIONIST;
+          userName = 'Front Desk';
           break;
         case 'parent':
           userRole = UserRole.PARENT;
           userName = 'Mr. Verma';
           break;
-        case 'super':
-          userRole = UserRole.SUPER_ADMIN;
-          userName = 'System Root';
+        case 'student':
+          userRole = UserRole.STUDENT;
+          userName = 'Aarav Kumar';
           break;
+
         default:
-          setError('Invalid Role.');
+          setError('Invalid Role Suffix.');
           setLoading(false);
           return;
       }
@@ -138,82 +176,120 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
     }, 800);
   };
 
+  const QuickLoginButton = ({ suffix, label, color = "bg-gray-100 text-gray-700" }: { suffix: string, label: string, color?: string }) => (
+    <button 
+      type="button"
+      onClick={() => setUsername(`demo.${suffix}`)} 
+      className={`text-xs px-2 py-1.5 rounded border border-gray-200 font-medium hover:brightness-95 transition-all text-center ${color}`}
+    >
+      {label}
+    </button>
+  );
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md space-y-8 rounded-2xl bg-white p-8 shadow-xl border border-gray-200">
-        <div className="text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-2xl space-y-6 rounded-2xl bg-white p-8 shadow-xl border border-gray-200">
+        <div className="text-center mb-8">
           <h2 className="text-3xl font-black text-gray-900 tracking-tight">
             PROJECT <span className="text-indigo-600">SOVEREIGN</span>
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Secure Role-Based Login
+            Secure Role-Based Access Gateway
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          <div className="-space-y-px rounded-md shadow-sm">
-            <div>
-              <label htmlFor="username" className="sr-only">Username</label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                className="relative block w-full rounded-t-md border-0 py-3 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="demo.admin / demo.nurse / demo.inventory"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="relative block w-full rounded-b-md border-0 py-3 px-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                placeholder="Any password works"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* LEFT: Login Form */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-bold text-gray-800 border-b pb-2">Credentials</h3>
+            <form className="space-y-4" onSubmit={handleLogin}>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase">User ID</label>
+                <input
+                  type="text"
+                  required
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                  placeholder="demo.admin"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 uppercase">Password</label>
+                <input
+                  type="password"
+                  required
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                  placeholder="Any password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              {error && (
+                <div className="text-red-600 text-xs font-bold text-center bg-red-50 p-2 rounded border border-red-200">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 disabled:opacity-70"
+              >
+                {loading ? 'Authenticating...' : 'Sign In'}
+              </button>
+            </form>
           </div>
 
-          {error && (
-            <div className="text-red-600 text-xs font-bold text-center bg-red-50 p-2 rounded border border-red-200">
-              {error}
-            </div>
-          )}
+          {/* RIGHT: Quick Login Hub */}
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Quick Login Hub</h3>
+             
+             <div className="space-y-4">
+                {/* Management */}
+                <div>
+                  <p className="text-[10px] font-bold text-indigo-600 mb-1">MANAGEMENT</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <QuickLoginButton suffix="super" label="Super Admin" color="bg-gray-800 text-white" />
+                    <QuickLoginButton suffix="admin" label="HR Admin" />
+                    <QuickLoginButton suffix="principal" label="Principal" />
+                    <QuickLoginButton suffix="vice_principal" label="Vice Prin." />
+                    <QuickLoginButton suffix="finance" label="Finance" />
+                  </div>
+                </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative flex w-full justify-center rounded-md bg-gray-900 px-3 py-3 text-sm font-semibold text-white hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-70 transition-all"
-            >
-              {loading ? 'Verifying Credentials...' : 'Sign In'}
-            </button>
+                {/* Operations */}
+                <div>
+                  <p className="text-[10px] font-bold text-orange-600 mb-1">OPERATIONS</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <QuickLoginButton suffix="admissions" label="Admissions" />
+                    <QuickLoginButton suffix="exam" label="Exam Cell" />
+                    <QuickLoginButton suffix="fleet" label="Transport" />
+                    <QuickLoginButton suffix="librarian" label="Library" />
+                    <QuickLoginButton suffix="warden" label="Hostel" />
+                    <QuickLoginButton suffix="nurse" label="Nurse" />
+                    <QuickLoginButton suffix="inventory" label="Inventory" />
+                    <QuickLoginButton suffix="security" label="Security" />
+                    <QuickLoginButton suffix="estate" label="Estate" />
+                    <QuickLoginButton suffix="it" label="IT Admin" />
+                  </div>
+                </div>
+
+                {/* Staff & Users */}
+                <div>
+                  <p className="text-[10px] font-bold text-green-600 mb-1">USER / STAFF</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <QuickLoginButton suffix="teacher" label="Teacher" color="bg-green-50 text-green-700 border-green-200" />
+                    <QuickLoginButton suffix="hod" label="HOD" />
+                    <QuickLoginButton suffix="counselor" label="Counselor" />
+                    <QuickLoginButton suffix="receptionist" label="Reception" />
+                    <QuickLoginButton suffix="parent" label="Parent" color="bg-blue-50 text-blue-700 border-blue-200" />
+                    <QuickLoginButton suffix="student" label="Student" color="bg-purple-50 text-purple-700 border-purple-200" />
+                  </div>
+                </div>
+             </div>
           </div>
-        </form>
-        
-        <div className="text-center space-y-2">
-           <div className="text-[10px] text-gray-400">
-             Quick Test Credentials (prefix 'demo.'):
-           </div>
-           <div className="flex flex-wrap justify-center gap-2 text-xs font-mono text-indigo-600">
-             <button onClick={() => setUsername('demo.admin')} className="hover:underline">Admin (HR)</button>
-             <span>|</span>
-             <button onClick={() => setUsername('demo.principal')} className="hover:underline">Principal</button>
-             <span>|</span>
-             <button onClick={() => setUsername('demo.finance')} className="hover:underline">Finance</button>
-             <span>|</span>
-             <button onClick={() => setUsername('demo.nurse')} className="hover:underline">Nurse</button>
-             <span>|</span>
-             <button onClick={() => setUsername('demo.admissions')} className="hover:underline">Admissions</button>
-             <span>|</span>
-             <button onClick={() => setUsername('demo.inventory')} className="hover:underline">Store</button>
-           </div>
         </div>
       </div>
     </div>
