@@ -47,18 +47,19 @@ export const SovereignInput: React.FC<InputProps> = ({ label, icon, error, class
   return (
     <div className="space-y-1.5 group">
       {label && (
-        <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wide group-focus-within:text-indigo-600 transition-colors">
+        <label className="block text-xs font-extrabold text-slate-600 uppercase tracking-wide group-focus-within:text-indigo-600 transition-colors">
           {label}
         </label>
       )}
       <div className="relative rounded-lg shadow-sm">
         {icon && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 group-focus-within:text-indigo-600 transition-colors z-10">
             {icon}
           </div>
         )}
         <input
-          className={`${INTERACTIVE.input} ${icon ? 'pl-10' : 'pl-3'} text-slate-900 font-medium placeholder:text-slate-400 ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''} ${className}`}
+          // FORCE HIGH CONTRAST: bg-white and text-gray-900. Removed bg-white/50 transparency.
+          className={`block w-full rounded-lg border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2.5 shadow-sm transition-colors ${icon ? 'pl-10' : 'pl-3'} font-medium ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''} ${className}`}
           {...props}
         />
       </div>
