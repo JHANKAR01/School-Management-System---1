@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { SchoolConfig, User, UserRole, AuthResponse } from '../../../../types';
 import { SovereignButton, SovereignInput } from '../../../../packages/app/components/SovereignComponents';
-import { ShieldCheck, School, Lock, User as UserIcon } from 'lucide-react';
+import { ShieldCheck, School, Lock, User as UserIcon, Check } from 'lucide-react';
 
 // Mock DB of Schools
 const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
@@ -126,15 +126,28 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
     }, 800);
   };
 
-  const QuickLoginChip = ({ role, label }: { role: string, label: string }) => (
-    <button
-      type="button"
-      onClick={() => setUsername(`demo.${role}`)}
-      className="px-2 py-1.5 text-[10px] font-bold bg-white border border-gray-200 rounded shadow-sm hover:border-indigo-400 hover:text-indigo-600 transition-colors truncate"
-    >
-      {label}
-    </button>
-  );
+  const QuickLoginChip = ({ role, label }: { role: string, label: string }) => {
+    const targetUsername = `demo.${role}`;
+    const isActive = username === targetUsername;
+
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          setUsername(targetUsername);
+          setPassword('password123'); // Auto-fill for UX
+        }}
+        className={`px-3 py-2 text-xs font-bold rounded-lg border shadow-sm transition-all flex items-center justify-center gap-1 ${
+          isActive 
+            ? 'bg-indigo-50 border-indigo-600 text-indigo-700 ring-2 ring-indigo-200' 
+            : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-white hover:border-indigo-300 hover:text-indigo-700'
+        }`}
+      >
+        {label}
+        {isActive && <Check className="w-3 h-3 text-indigo-600" />}
+      </button>
+    );
+  };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-50 font-sans">
@@ -216,8 +229,8 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
                <div className="space-y-4">
                   {Object.entries(QUICK_LOGIN_GROUPS).map(([category, roles]) => (
                     <div key={category} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-                       <h3 className="text-[10px] font-bold text-gray-500 uppercase mb-2 ml-1">{category}</h3>
-                       <div className="grid grid-cols-3 gap-2">
+                       <h3 className="text-xs font-bold text-slate-500 uppercase mb-2 ml-1">{category}</h3>
+                       <div className="flex flex-wrap gap-2">
                           {roles.map(r => (
                             <QuickLoginChip key={r.role} role={r.role} label={r.label} />
                           ))}

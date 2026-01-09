@@ -36,7 +36,7 @@ export const SovereignButton: React.FC<ButtonProps> = ({
   );
 };
 
-// --- 2. SOVEREIGN INPUT ---
+// --- 2. SOVEREIGN INPUT (ACCESSIBILITY ENHANCED) ---
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   icon?: React.ReactNode;
@@ -45,20 +45,24 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const SovereignInput: React.FC<InputProps> = ({ label, icon, error, className = '', ...props }) => {
   return (
-    <div className="space-y-1.5">
-      {label && <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">{label}</label>}
+    <div className="space-y-1.5 group">
+      {label && (
+        <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wide group-focus-within:text-indigo-600 transition-colors">
+          {label}
+        </label>
+      )}
       <div className="relative rounded-lg shadow-sm">
         {icon && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 group-focus-within:text-indigo-600 transition-colors">
             {icon}
           </div>
         )}
         <input
-          className={`${INTERACTIVE.input} ${icon ? 'pl-10' : 'pl-3'} ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''} ${className}`}
+          className={`${INTERACTIVE.input} ${icon ? 'pl-10' : 'pl-3'} text-slate-900 font-medium placeholder:text-slate-400 ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''} ${className}`}
           {...props}
         />
       </div>
-      {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+      {error && <p className="text-xs text-red-600 font-bold">{error}</p>}
     </div>
   );
 };
