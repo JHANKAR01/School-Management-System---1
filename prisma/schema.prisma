@@ -68,10 +68,6 @@ model School {
   invoices Invoice[]
 }
 
-//////////////////////////////////////////////////////
-// USERS (STAFF + PARENTS)
-//////////////////////////////////////////////////////
-
 model User {
   id            String   @id @default(cuid())
   name          String
@@ -85,18 +81,12 @@ model User {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  // RELATIONS
   school       School             @relation(fields: [school_id], references: [id])
-  parent_links ParentStudent[] // only for parents
+  parent_links ParentStudent[] 
   documents    IdentityDocument[]
 
   @@index([school_id])
-  @@index([role])
 }
-
-//////////////////////////////////////////////////////
-// STUDENTS
-//////////////////////////////////////////////////////
 
 model Student {
   id           String  @id @default(cuid())
@@ -110,64 +100,81 @@ model Student {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  // RELATIONS
+  school       School             @relation(fields: [school_id], references: [id])
   parents      ParentStudent[]
   documents    IdentityDocument[]
   invoices     Invoice[]
   attendance   Attendance[]
   medical_logs MedicalLog[]
   counseling   Counseling[]
-  school       School?            @relation(fields: [schoolId], references: [id])
-  schoolId     String?
 
   @@unique([school_id, admission_no])
   @@index([school_id])
 }
 
-//////////////////////////////////////////////////////
-// PARENT ↔ STUDENT (EXPLICIT JOIN)
-//////////////////////////////////////////////////////
-
 model ParentStudent {
-  parent_id  String
-  student_id String
-  school_id  String
-  relation   String // FATHER | MOTHER | GUARDIAN
-  is_primary Boolean @default(false)
+  parent_id   String
+  student_id  String
+  school_id   String
+  relation    String
+  is_primary  Boolean @default(false)
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  parent  User    @relation(fields: [parent_id], references: [id], onDelete: Cascade)
-  student Student @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  parent      User    @relation(fields: [parent_id], references: [id])
+  student     Student @relation(fields: [student_id], references: [id])
 
   @@id([parent_id, student_id])
   @@index([school_id])
 }
 
-//////////////////////////////////////////////////////
-// DOCUMENTS (METADATA ONLY)
-//////////////////////////////////////////////////////
 
 model IdentityDocument {
   id                  String         @id @default(cuid())
   owner_user_id       String?
   owner_student_id    String?
-  doc_type            String // AADHAAR | DL | CASTE_CERT | TC
-  file_ref            String // S3 / MinIO path
+  doc_type            String 
+  file_ref            String 
   masked_id           String?
   verification_status DocumentStatus @default(PENDING)
   school_id           String
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at          DateTime       @default(now())
 
   owner_user    User?    @relation(fields: [owner_user_id], references: [id])
   owner_student Student? @relation(fields: [owner_student_id], references: [id])
 
   @@index([school_id])
-  @@index([doc_type])
 }
+
+model Bus {
+  id              String   @id @default(cuid())
+  plateNumber     String   @unique
+  driverName      String
+  capacity        Int
+  routeId         String
+  insuranceExpiry DateTime
+  school_id       String
+
+  school          School   @relation(fields: [school_id], references: [id])
+
+  @@index([school_id])
+}
+
+
+
+model Book {
+  isbn        String   @id
+  title       String
+  author      String
+  status      String
+  issuedTo    String?
+  school_id   String
+
+  school      School   @relation(fields: [school_id], references: [id])
+
+  @@index([school_id])
+}
+
+
+
 
 //////////////////////////////////////////////////////
 // FINANCE
