@@ -62,6 +62,7 @@ model School {
   name          String
   settings_json Json?
   created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
   users         User[]
   students      Student[]
@@ -102,7 +103,7 @@ model Student {
   id            String    @id @default(cuid())
   admission_no  String
   name          String
-  email         String?
+  email         String?   @unique
   class         String
   roll          Int
   school_id     String
@@ -120,7 +121,6 @@ model Student {
 
   @@unique([school_id, admission_no])
   @@index([school_id])
-  @@index([email])
 }
 
 //////////////////////////////////////////////////////
@@ -133,6 +133,9 @@ model ParentStudent {
   school_id   String
   relation    String    // FATHER | MOTHER | GUARDIAN
   is_primary  Boolean   @default(false)
+
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
   parent      User     @relation(fields: [parent_id], references: [id], onDelete: Cascade)
   student     Student  @relation(fields: [student_id], references: [id], onDelete: Cascade)
@@ -156,6 +159,7 @@ model IdentityDocument {
   school_id           String
 
   created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
 
   owner_user          User?            @relation(fields: [owner_user_id], references: [id])
   owner_student       Student?         @relation(fields: [owner_student_id], references: [id])
@@ -178,6 +182,9 @@ model Invoice {
   status          InvoiceStatus @default(PENDING)
   utr             String?
   school_id       String
+
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
 
   student         Student       @relation(fields: [student_id], references: [id])
 
