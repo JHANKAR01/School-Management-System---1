@@ -3,9 +3,10 @@ import React from 'react';
 import { SchoolConfig } from '../../../../types';
 import ParentPayments from '../../../../apps/expo/app/parent/payments';
 import TransportTracking from '../../../../apps/expo/app/parent/transport';
-import { Gradebook } from '../academics/Gradebook'; // Read-only view
-import { StatCard, PageHeader } from '../../components/SovereignComponents';
-import { Wallet, Bus, FileText, CheckCircle } from 'lucide-react';
+import { Gradebook } from '../academics/Gradebook';
+import { StatCard, PageHeader, SovereignButton } from '../../components/SovereignComponents';
+import { Wallet, Bus, FileText, CheckCircle, Bell } from 'lucide-react';
+import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
 
 interface Props {
   school: SchoolConfig;
@@ -13,34 +14,53 @@ interface Props {
 }
 
 export const ParentDashboard: React.FC<Props> = ({ school, activeModule }) => {
-  return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto">
-      <PageHeader 
-        title="Student Portal" 
-        subtitle="Aarav Kumar • Class X-A" 
-      />
+  // Mock logged in student as 'std_1' (Aarav Kumar)
+  const student = SOVEREIGN_GENESIS_DATA.students.find(s => s.id === 'std_1');
+  const invoices = SOVEREIGN_GENESIS_DATA.invoices.filter(inv => inv.studentId === 'std_1' && inv.status === 'PENDING');
+  const totalDue = invoices.reduce((acc, curr) => acc + curr.amount, 0);
 
-      {/* KPI GRID */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-         <StatCard title="Fees Due" value="₹2,450" icon={<Wallet className="w-5 h-5" />} />
-         <StatCard title="Attendance" value="92%" trend={{ value: 5, isPositive: true }} icon={<CheckCircle className="w-5 h-5" />} />
-         <StatCard title="Bus Status" value="On Time" subtitle="Arriving 4:10 PM" icon={<Bus className="w-5 h-5" />} />
-         <StatCard title="Report Card" value="A+" subtitle="Term 1 Result" icon={<FileText className="w-5 h-5" />} />
+  if (!student) return <div>Loading Profile...</div>;
+
+  return (
+    <div className="p-4 md:p-8 max-w-4xl mx-auto pb-24 md:pb-8">
+      <div className="flex justify-between items-start mb-6">
+        <PageHeader 
+          title="Student Portal" 
+          subtitle={`${student.name} • Class ${student.class}`} 
+        />
+        <button className="p-2 bg-white border rounded-full relative">
+           <Bell className="w-5 h-5 text-gray-600" />
+           <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+        </button>
+      </div>
+
+      {/* KPI GRID - Mobile Optimized (2x2) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+         <StatCard 
+            title="Fees Due" 
+            value={`₹${totalDue.toLocaleString()}`} 
+            icon={<Wallet className="w-4 h-4" />} 
+            subtitle={invoices.length > 0 ? "Action Required" : "All Clear"}
+         />
+         <StatCard title="Attendance" value="92%" trend={{ value: 5, isPositive: true }} icon={<CheckCircle className="w-4 h-4" />} />
+         <StatCard title="Bus Status" value="On Time" subtitle="ETA 4:10 PM" icon={<Bus className="w-4 h-4" />} />
+         <StatCard title="Result" value="A+" subtitle="Term 1" icon={<FileText className="w-4 h-4" />} />
       </div>
       
       {activeModule === 'FEES' && <ParentPayments />}
 
       {activeModule === 'TRACKING' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">Live Bus Tracking</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-4 border-b border-gray-100">
+             <h2 className="text-lg font-bold text-gray-800">Live Bus Tracking</h2>
+          </div>
           <TransportTracking />
         </div>
       )}
 
       {activeModule === 'REPORT' && (
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-             <h2 className="text-xl font-bold text-gray-800 mb-6">Academic Performance</h2>
-             <div className="pointer-events-none opacity-90 scale-95 origin-top">
+        <div className="bg-white p-4 md:p-6 rounded-xl border border-gray-200 shadow-sm">
+             <div className="pointer-events-none md:pointer-events-auto">
                 <Gradebook />
              </div>
              <p className="text-center text-xs text-gray-400 mt-4">
@@ -48,6 +68,16 @@ export const ParentDashboard: React.FC<Props> = ({ school, activeModule }) => {
              </p>
         </div>
       )}
+
+      {/* THUMB ZONE ACTION BAR (Mobile Only) */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 md:hidden flex gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50">
+         <SovereignButton className="flex-1 py-3 text-sm" variant="secondary" icon={<Bus className="w-4 h-4"/>}>
+           Track Bus
+         </SovereignButton>
+         <SovereignButton className="flex-1 py-3 text-sm shadow-xl shadow-indigo-500/20" icon={<Wallet className="w-4 h-4"/>}>
+           Pay Fees
+         </SovereignButton>
+      </div>
     </div>
   );
 };

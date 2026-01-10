@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SovereignButton, SovereignTable, SovereignInput, SovereignBadge } from '../../components/SovereignComponents';
 
+// Mock CRM data for now, could be added to Genesis if needed in future
 const MOCK_INQUIRIES = [
     { id: 1, parent_name: 'Mrs. Verma', phone: '9876543210', target_class: 'Class 5', status: 'NEW' },
     { id: 2, parent_name: 'Mr. Singh', phone: '9988776655', target_class: 'Class 8', status: 'FOLLOW_UP' },
@@ -15,15 +16,13 @@ export const AdmissionsDashboard = () => {
   const { data: inquiries, isLoading } = useQuery({
     queryKey: ['inquiries'],
     queryFn: async () => {
-      // const res = await fetch('/api/admissions', ...);
-      // return res.json();
+      // Future: Return SOVEREIGN_GENESIS_DATA.inquiries
       return MOCK_INQUIRIES;
     }
   });
 
   const addMutation = useMutation({
     mutationFn: async (data: any) => {
-      // await fetch('/api/admissions', ...);
       console.log("[DEMO] Log Inquiry:", data);
     },
     onSuccess: () => {

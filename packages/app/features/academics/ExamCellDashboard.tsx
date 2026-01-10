@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { SovereignTable, PageHeader, StatCard, SovereignBadge } from '../../components/SovereignComponents';
 import { FileText, Lock, Printer } from 'lucide-react';
 
+// Mock inventory for exams
 const MOCK_PAPERS = [
     { id: 'QP-1', subject: 'Mathematics', class: 'X', copies: 150, status: 'PRINTED', location: 'Strong Room A' },
     { id: 'QP-2', subject: 'Physics', class: 'XII', copies: 80, status: 'PENDING', location: '-' },
@@ -14,8 +15,7 @@ export const ExamCellDashboard = () => {
   const { data: papers } = useQuery({
     queryKey: ['papers'],
     queryFn: async () => {
-      // const res = await fetch('/api/academics/papers', ...);
-      // return res.json();
+      // Future: SOVEREIGN_GENESIS_DATA.papers
       return MOCK_PAPERS;
     }
   });

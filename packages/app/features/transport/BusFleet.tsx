@@ -10,14 +10,13 @@ export const BusFleet = () => {
   const { data: buses } = useQuery({
     queryKey: ['buses'],
     queryFn: async () => {
-      // const res = await fetch('/api/logistics/buses', ...);
-      // return res.json();
+      // Mapping Genesis Buses to display format
       return SOVEREIGN_GENESIS_DATA.buses.map(b => ({
         ...b,
-        number: b.plateNumber, // Map mismatch
+        number: b.plateNumber,
         route: b.routeId,
-        status: 'ON_ROUTE', // Default for demo
-        occupied: Math.floor(b.capacity * 0.8),
+        status: 'ON_ROUTE', // Demo override
+        occupied: Math.floor(b.capacity * 0.85),
         driver: b.driverName
       }));
     }
@@ -25,7 +24,6 @@ export const BusFleet = () => {
 
   const assignMutation = useMutation({
     mutationFn: async () => {
-      // await fetch('/api/logistics/assign-route', ...);
       console.log("[DEMO] Route Assigned");
     },
     onSuccess: () => alert("Route Assigned & Invoice Generated (Mock)")
@@ -40,7 +38,7 @@ export const BusFleet = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-7xl mx-auto">
       <h2 className="text-xl font-bold mb-4">Fleet Management</h2>
       <div className="mb-6">
          <SovereignTable data={buses || []} columns={columns} />
@@ -48,7 +46,7 @@ export const BusFleet = () => {
       <div className="bg-white p-6 rounded-xl border shadow-sm max-w-md">
         <p className="mb-4 font-bold text-gray-700">Quick Actions</p>
         <SovereignButton onClick={() => assignMutation.mutate()} isLoading={assignMutation.isPending}>
-          Assign Route R1 to Student S1 (Demo)
+          Assign Route R1 to Student (Demo)
         </SovereignButton>
       </div>
     </div>

@@ -11,10 +11,8 @@ export const HostelWarden = () => {
   const { data: rooms, isLoading } = useQuery({
     queryKey: ['rooms'],
     queryFn: async () => {
-      // const res = await fetch('/api/logistics/rooms', ...);
-      // return res.json();
       return SOVEREIGN_GENESIS_DATA.hostel.map(h => ({
-        id: h.roomNumber, // Mock ID
+        id: h.roomNumber,
         number: h.roomNumber,
         block: h.gender === 'BOYS' ? 'Cauvery (Boys)' : 'Ganga (Girls)',
         capacity: h.capacity,
@@ -25,11 +23,9 @@ export const HostelWarden = () => {
 
   const allocateMutation = useMutation({
     mutationFn: async ({ room, studentId }: { room: string, studentId: string }) => {
-      // await fetch('/api/logistics/allocate-room', ...);
       console.log("[DEMO] Allocate Room:", room, studentId);
     },
     onSuccess: () => {
-      // queryClient.invalidateQueries({ queryKey: ['rooms'] });
       alert("Allocated & Fee Generated (Mock)");
     }
   });
@@ -42,7 +38,7 @@ export const HostelWarden = () => {
   if (isLoading) return <SovereignSkeleton className="h-64" />;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden m-6">
       <div className="flex border-b border-gray-200">
         <button onClick={() => setView('ALLOCATION')} className={`flex-1 py-3 text-sm font-bold ${view === 'ALLOCATION' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500'}`}>Room Allocation</button>
         <button onClick={() => setView('ATTENDANCE')} className={`flex-1 py-3 text-sm font-bold ${view === 'ATTENDANCE' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500'}`}>Night Roll Call</button>

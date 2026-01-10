@@ -3,12 +3,15 @@ import React, { useState } from 'react';
 import { SchoolConfig } from '../../../../types';
 import { generateUPILink } from '../../../api/src/upi-engine';
 import { StatCard, PageHeader, SovereignButton, SovereignTable, SovereignBadge } from '../../components/SovereignComponents';
-import { Wallet, AlertCircle, TrendingUp, CheckCircle, Upload, FileText } from 'lucide-react';
+import { Wallet, AlertCircle, TrendingUp, CheckCircle, Upload, FileText, Check } from 'lucide-react';
 import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
+import { fuzzyMatch } from '../../../api/src/utils/finance-utils';
 
 export const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: string }> = ({ school, activeModule }) => {
   const [reconcileFile, setReconcileFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [invoices, setInvoices] = useState(SOVEREIGN_GENESIS_DATA.invoices);
+  const [reconcileStats, setReconcileStats] = useState<{matched: number, total: number} | null>(null);
 
   const sampleFeeLink = generateUPILink({
     payeeVPA: school.upi_vpa,
@@ -23,6 +26,7 @@ export const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: st
     { header: "Student", accessor: "studentId" },
     { header: "Description", accessor: "description" },
     { header: "Amount", accessor: (row: any) => `₹${row.amount}` },
+    { header: "UTR / Ref", accessor: (row: any) => <span className="font-mono text-xs">{row.utr || '-'}</span> },
     { header: "Status", accessor: (row: any) => <SovereignBadge status={row.status === 'PAID' ? 'success' : 'warning'}>{row.status}</SovereignBadge> },
   ];
 
@@ -33,11 +37,36 @@ export const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: st
   const runReconciliation = () => {
     if (!reconcileFile) return;
     setIsProcessing(true);
+
+    // MOCK PARSING BANK STATEMENT
+    // In a real app, we'd parse the CSV file. Here we simulate entries.
+    const mockBankRows = [
+        { utr: 'UPI123456789012', amount: 5000 }, // Perfect match for INV-001
+        { utr: 'UPI987654321098', amount: 5000 }, // Perfect match for INV-005
+        { utr: 'NEFT0987654321', amount: 2500 },  // Perfect match for INV-003
+    ];
+
     setTimeout(() => {
-      alert("Reconciliation Complete! 15 Matches Found using Fuzzy Logic.");
+      let matchCount = 0;
+      const updatedInvoices = invoices.map(inv => {
+          if (inv.status === 'PAID') return inv;
+
+          // 1. Logic: Match by UTR
+          const exactMatch = mockBankRows.find(row => row.utr === inv.utr && row.amount === inv.amount);
+          
+          if (exactMatch) {
+              matchCount++;
+              return { ...inv, status: 'PAID' };
+          }
+          return inv;
+      });
+
+      // @ts-ignore
+      setInvoices(updatedInvoices);
+      setReconcileStats({ matched: matchCount, total: mockBankRows.length });
       setIsProcessing(false);
       setReconcileFile(null);
-    }, 2000);
+    }, 1500);
   };
 
   const handleBatchGenerate = () => {
@@ -87,7 +116,7 @@ export const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: st
              <div className="p-4 border-b border-gray-100 bg-gray-50">
                <h3 className="font-bold text-gray-700">Recent Invoices</h3>
              </div>
-             <SovereignTable data={SOVEREIGN_GENESIS_DATA.invoices || []} columns={columns} />
+             <SovereignTable data={invoices} columns={columns} />
           </div>
         </div>
       )}
@@ -106,10 +135,25 @@ export const FinanceDashboard: React.FC<{ school: SchoolConfig, activeModule: st
              </label>
           </div>
 
-          {reconcileFile && (
+          {reconcileFile && !reconcileStats && (
             <SovereignButton onClick={runReconciliation} isLoading={isProcessing} className="mt-6">
-               Run Fuzzy Match Engine
+               Run Reconciliation Engine
             </SovereignButton>
+          )}
+
+          {reconcileStats && (
+            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+               <div className="flex items-center justify-center gap-2 text-green-800 font-bold text-lg">
+                  <Check className="w-6 h-6" />
+                  Processed Successfully
+               </div>
+               <p className="text-sm text-green-700 mt-1">
+                 Matched {reconcileStats.matched} out of {reconcileStats.total} transactions.
+               </p>
+               <SovereignButton variant="ghost" onClick={() => setReconcileStats(null)} className="mt-2 text-xs">
+                 Reset
+               </SovereignButton>
+            </div>
           )}
 
           <div className="mt-8 p-4 bg-yellow-50 text-yellow-800 text-sm rounded border border-yellow-200 inline-block">

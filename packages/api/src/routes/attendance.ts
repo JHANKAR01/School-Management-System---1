@@ -55,14 +55,14 @@ export async function submitAttendance(c: HonoContext) {
     // 5. TRIGGER: Absent Alert
     if (status === 'ABSENT') {
       // In background (don't block response)
-      setImmediate(async () => {
+      setTimeout(async () => {
         try {
             const student = await prisma.student.findUnique({ where: { id: studentId } });
             if (student && student.parent_fcm_token) {
                 await NotificationService.sendAttendanceAlert(student.name, student.parent_fcm_token);
             }
         } catch(e) { console.error("Alert Trigger Failed", e); }
-      });
+      }, 0);
     }
 
     return c.json({ success: true, record });

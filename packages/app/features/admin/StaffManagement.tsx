@@ -10,12 +10,9 @@ export const StaffManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newStaff, setNewStaff] = useState({ name: '', username: '', role: UserRole.TEACHER, department: '' });
 
-  // 1. Fetch Staff from Genesis Data
   const { data: staff, isLoading } = useQuery({
     queryKey: ['staff'],
     queryFn: async () => {
-      // const res = await fetch('/api/staff', ...);
-      // return res.json();
       return SOVEREIGN_GENESIS_DATA.staff.map(s => ({
         id: s.id,
         full_name: s.name,
@@ -25,25 +22,20 @@ export const StaffManagement = () => {
     }
   });
 
-  // 2. Hire Mutation (Mock)
   const hireMutation = useMutation({
     mutationFn: async (data: any) => {
-      // await fetch('/api/staff', ...);
       console.log("[DEMO] Hiring:", data);
       return { success: true };
     },
     onSuccess: () => {
-      // queryClient.invalidateQueries({ queryKey: ['staff'] });
       alert("Staff Member Added (Mock)");
       setShowAddModal(false);
       setNewStaff({ name: '', username: '', role: UserRole.TEACHER, department: '' });
     }
   });
 
-  // 3. Fire Mutation (Mock)
   const fireMutation = useMutation({
     mutationFn: async (id: string) => {
-      // await fetch(`/api/staff/${id}`, ...);
       console.log("[DEMO] Firing:", id);
     },
     onSuccess: () => alert("Access Revoked (Mock)")

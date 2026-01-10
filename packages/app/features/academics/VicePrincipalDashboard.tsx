@@ -14,8 +14,7 @@ export const VicePrincipalDashboard = () => {
   const { data: substitutions, isLoading } = useQuery({
     queryKey: ['substitutions'],
     queryFn: async () => {
-      // const res = await fetch('/api/academics/substitutions', ...);
-      // return res.json();
+      // Future: SOVEREIGN_GENESIS_DATA.substitutions
       return MOCK_SUBSTITUTIONS;
     }
   });

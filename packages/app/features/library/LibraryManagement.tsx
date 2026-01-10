@@ -11,22 +11,18 @@ export const LibraryManagement = () => {
   const { data: books } = useQuery({
     queryKey: ['books'],
     queryFn: async () => {
-      // const res = await fetch('/api/logistics/books', ...);
-      // return res.json();
       return SOVEREIGN_GENESIS_DATA.books;
     }
   });
   
   const returnMutation = useMutation({
     mutationFn: async () => {
-      // await fetch('/api/logistics/return-book', ...);
       console.log("[DEMO] Returning Book ISBN:", isbn);
       return { fine: 0 };
     },
     onSuccess: (data) => {
-      // queryClient.invalidateQueries({ queryKey: ['books'] });
-      if (data.fine > 0) alert(`Book Returned. Fine of ₹${data.fine} added to invoice.`);
-      else alert("Book Returned. No fine (Mock).");
+      alert("Book Returned. No fine (Mock).");
+      setIsbn('');
     }
   });
 
@@ -40,8 +36,8 @@ export const LibraryManagement = () => {
   return (
     <div className="p-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl border shadow-sm h-fit">
-          <h3 className="font-bold mb-4">Return Processor</h3>
+        <div className="bg-white p-6 rounded-xl border shadow-sm h-fit space-y-4">
+          <h3 className="font-bold">Return Processor</h3>
           <SovereignInput label="Scan ISBN" value={isbn} onChange={e => setIsbn(e.target.value)} />
           <div className="mt-4">
             <SovereignButton onClick={() => returnMutation.mutate()} isLoading={returnMutation.isPending} className="w-full">

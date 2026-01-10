@@ -1,6 +1,7 @@
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { StudentResult } from '../../../../types';
+import { Buffer } from 'buffer';
 
 /**
  * Sovereign PDF Engine

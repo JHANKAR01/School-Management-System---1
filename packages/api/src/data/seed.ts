@@ -1,3 +1,4 @@
+
 // import { PrismaClient } from '@prisma/client';
 import { SOVEREIGN_GENESIS_DATA } from './dummy-data';
 
@@ -54,7 +55,7 @@ async function main() {
 main()
   .catch((e) => {
     console.error(e);
-    process.exit(1);
+    (process as any).exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
