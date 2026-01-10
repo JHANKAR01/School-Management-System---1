@@ -1,7 +1,11 @@
 import { PrismaClient, UserRole, InvoiceStatus, DocumentStatus, AttendanceStatus } from '@prisma/client';
 import { SOVEREIGN_GENESIS_DATA } from './dummy-data.ts'; // FIXED: Changed .js to .ts
 
+// const prisma = new PrismaClient();
 const prisma = new PrismaClient();
+
+
+
 
 async function main() {
   console.log('🌱 Starting Sovereign Genesis Seed');
@@ -168,8 +172,8 @@ async function main() {
 }
 
 main()
-  .catch(err => { 
-    console.error('❌ Seed failed:', err); 
-    process.exit(1); 
+  .catch(err => {
+    console.error('❌ Seed failed:', err);
+    process.exit(1);
   })
   .finally(() => prisma.$disconnect());
