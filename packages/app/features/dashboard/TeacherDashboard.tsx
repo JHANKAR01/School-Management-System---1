@@ -44,17 +44,20 @@ export const TeacherDashboard: React.FC<Props> = ({ school, activeModule }) => {
   };
 
   const handleCreateHomework = () => {
+    if(!hwForm.title || !hwForm.dueDate) {
+        alert("Please fill required fields");
+        return;
+    }
     addHomework(hwForm);
     setHwModalOpen(false);
     setHwForm({ title: '', subject: 'Mathematics', description: '', dueDate: '', classId: '10-A' });
-    alert("Homework Created Successfully!");
+    // In a real app, use toast here
   };
 
   const handleApplyLeave = () => {
     applyLeave(leaveForm as any);
     setLeaveModalOpen(false);
     setLeaveForm({ type: 'SICK', startDate: '', endDate: '', reason: '' });
-    alert("Leave Application Sent to Principal.");
   };
 
   const isMathLive = liveClasses['Mathematics'] || false;
@@ -137,6 +140,18 @@ export const TeacherDashboard: React.FC<Props> = ({ school, activeModule }) => {
                       { header: 'Dates', accessor: (row: any) => `${row.startDate} to ${row.endDate}` },
                       { header: 'Reason', accessor: 'reason' },
                       { header: 'Status', accessor: (row: any) => <SovereignBadge status={row.status === 'APPROVED' ? 'success' : row.status === 'REJECTED' ? 'error' : 'warning'}>{row.status}</SovereignBadge> }
+                   ]}
+                />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Homework</h3>
+                <SovereignTable
+                   data={homeworks}
+                   columns={[
+                      { header: 'Title', accessor: 'title' },
+                      { header: 'Due Date', accessor: 'dueDate' },
+                      { header: 'Status', accessor: (row: any) => <SovereignBadge status={row.status === 'SUBMITTED' ? 'success' : 'neutral'}>{row.status}</SovereignBadge> }
                    ]}
                 />
               </div>

@@ -59,13 +59,13 @@ export const PrincipalDashboard: React.FC<{ activeModule: string }> = ({ activeM
                 actions={(leave) => (
                     <div className="flex gap-2">
                         <button 
-                            className="text-xs font-bold text-green-600 hover:bg-green-50 px-2 py-1 rounded"
+                            className="text-xs font-bold text-green-600 hover:bg-green-50 px-3 py-1.5 rounded-lg transition-colors border border-green-200"
                             onClick={() => updateLeaveStatus(leave.id, 'APPROVED')}
                         >
                             Approve
                         </button>
                         <button 
-                            className="text-xs font-bold text-red-600 hover:bg-red-50 px-2 py-1 rounded"
+                            className="text-xs font-bold text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-red-200"
                             onClick={() => updateLeaveStatus(leave.id, 'REJECTED')}
                         >
                             Reject
