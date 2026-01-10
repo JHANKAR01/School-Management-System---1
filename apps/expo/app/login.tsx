@@ -1,10 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SchoolConfig, User, UserRole, AuthResponse } from '../../../../types';
 import { SovereignButton, SovereignInput } from '../../../../packages/app/components/SovereignComponents';
-import { ShieldCheck, Lock, User as UserIcon, Check, Loader2 } from 'lucide-react';
+import { ShieldCheck, Lock, User as UserIcon, Loader2, Fingerprint } from 'lucide-react';
+import { Platform } from 'react-native';
+import * as LocalAuthentication from 'expo-local-authentication';
+import * as SecureStore from 'expo-secure-store';
 
-// Mock DB of Schools
+// Mock DB of Schools (Keep existing)
 const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
   'demo': {
     school_id: 'sch_123',
@@ -26,46 +29,12 @@ const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
   }
 };
 
-const QUICK_LOGIN_GROUPS = {
-  Management: [
-    { role: 'super', label: 'Super Admin' },
-    { role: 'admin', label: 'HR Admin' },
-    { role: 'principal', label: 'Principal' },
-    { role: 'vice_principal', label: 'Vice Prin.' },
-    { role: 'finance', label: 'Finance' },
-  ],
-  Operations: [
-    { role: 'admissions', label: 'Admissions' },
-    { role: 'exam', label: 'Exam Cell' },
-    { role: 'fleet', label: 'Transport' },
-    { role: 'librarian', label: 'Librarian' },
-    { role: 'warden', label: 'Warden' },
-    { role: 'nurse', label: 'Nurse' },
-    { role: 'inventory', label: 'Inventory' },
-    { role: 'security', label: 'Security' },
-    { role: 'estate', label: 'Estate' },
-    { role: 'it', label: 'IT Admin' },
-  ],
-  Users: [
-    { role: 'teacher', label: 'Teacher' },
-    { role: 'parent', label: 'Parent' },
-    { role: 'student', label: 'Student' },
-    { role: 'hod', label: 'HOD' },
-    { role: 'counselor', label: 'Counselor' },
-    { role: 'receptionist', label: 'Reception' },
-  ]
-};
-
-// Comprehensive Mapping to fix "Invalid Role Suffix"
 const ROLE_SUFFIX_MAP: Record<string, UserRole> = {
-  // Management
-  'super': UserRole.SUPER_ADMIN, // Special case
+  'super': UserRole.SUPER_ADMIN,
   'admin': UserRole.SCHOOL_ADMIN,
   'principal': UserRole.PRINCIPAL,
   'vice_principal': UserRole.VICE_PRINCIPAL,
   'finance': UserRole.FINANCE_MANAGER,
-  
-  // Operations
   'admissions': UserRole.ADMISSIONS_OFFICER,
   'exam': UserRole.EXAM_CELL,
   'fleet': UserRole.FLEET_MANAGER,
@@ -76,8 +45,6 @@ const ROLE_SUFFIX_MAP: Record<string, UserRole> = {
   'security': UserRole.SECURITY_HEAD,
   'estate': UserRole.ESTATE_MANAGER,
   'it': UserRole.IT_ADMIN,
-
-  // Users
   'teacher': UserRole.TEACHER,
   'parent': UserRole.PARENT,
   'student': UserRole.STUDENT,
@@ -95,17 +62,51 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
+  const [savedSession, setSavedSession] = useState<string | null>(null);
 
-  // Unified Login Logic
+  // Check Biometrics Support
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      (async () => {
+        const compatible = await LocalAuthentication.hasHardwareAsync();
+        const enrolled = await LocalAuthentication.isEnrolledAsync();
+        setIsBiometricAvailable(compatible && enrolled);
+        
+        const session = await SecureStore.getItemAsync('sovereign_user_session');
+        if (session) setSavedSession(session);
+      })();
+    }
+  }, []);
+
+  // Biometric Auth Handler
+  const handleBiometricLogin = async () => {
+    if (!savedSession) return;
+    
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Authenticate to access Sovereign ERP',
+      fallbackLabel: 'Use Passcode'
+    });
+
+    if (result.success) {
+      setLoading(true);
+      setTimeout(() => {
+        const sessionData = JSON.parse(savedSession);
+        // Refresh token logic would go here
+        onLoginSuccess(sessionData);
+        setLoading(false);
+      }, 500);
+    }
+  };
+
   const performLogin = async (userStr: string, passStr: string) => {
     setLoading(true);
     setError('');
 
-    // Simulate API Latency for "Fast" feel (reduced to 500ms)
-    setTimeout(() => {
+    setTimeout(async () => {
       const parts = userStr.split('.');
       const schoolPrefix = parts[0];
-      const roleSuffix = parts.slice(1).join('_'); // Handle cases if we ever use multi-word suffixes
+      const roleSuffix = parts.slice(1).join('_');
 
       const schoolConfig = MOCK_SCHOOL_DB[schoolPrefix];
 
@@ -118,23 +119,13 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
       let userRole = UserRole.STUDENT;
       let userName = 'User';
 
-      // 1. Check Special Super Admin
       if (roleSuffix === 'super') {
         userRole = UserRole.SUPER_ADMIN;
         userName = "Super Admin";
-      } 
-      // 2. Check Strict Mapping
-      else if (ROLE_SUFFIX_MAP[roleSuffix]) {
+      } else if (ROLE_SUFFIX_MAP[roleSuffix]) {
         userRole = ROLE_SUFFIX_MAP[roleSuffix];
-        // Format Name: "it" -> "IT Admin", "vice_principal" -> "Vice Principal"
-        userName = roleSuffix
-          .split('_')
-          .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(' ');
-      } 
-      // 3. Fallback / Error
-      else {
-         console.warn(`Unknown Role Suffix: ${roleSuffix}`);
+        userName = roleSuffix.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      } else {
          setError(`Invalid Role Suffix: ${roleSuffix}`);
          setLoading(false);
          return;
@@ -147,38 +138,21 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
         school_id: schoolConfig.school_id
       };
 
-      onLoginSuccess({ user, school: schoolConfig });
-      setLoading(false); // Just in case unmount doesn't happen immediately
+      const authData = { user, school: schoolConfig };
+      
+      // Save Session Securely on Native
+      if (Platform.OS !== 'web') {
+        await SecureStore.setItemAsync('sovereign_user_session', JSON.stringify(authData));
+      }
+
+      onLoginSuccess(authData);
+      setLoading(false);
     }, 500);
   };
 
   const handleManualLogin = (e: React.FormEvent) => {
     e.preventDefault();
     performLogin(username, password);
-  };
-
-  const QuickLoginChip = ({ role, label }: { role: string, label: string }) => {
-    const targetUsername = `demo.${role}`;
-    const isActive = username === targetUsername;
-
-    return (
-      <button
-        type="button"
-        disabled={loading}
-        onClick={() => {
-          setUsername(targetUsername);
-          setPassword('password123');
-          performLogin(targetUsername, 'password123'); // Instant Auto-Login
-        }}
-        className={`px-3 py-2 text-xs font-bold rounded-lg border shadow-sm transition-all flex items-center justify-center gap-1 min-w-[80px] ${
-          isActive 
-            ? 'bg-indigo-600 border-indigo-700 text-white ring-2 ring-indigo-200' 
-            : 'bg-slate-200 border-slate-300 text-slate-700 hover:bg-slate-300 hover:border-slate-400 hover:text-slate-900'
-        }`}
-      >
-        {loading && isActive ? <Loader2 className="w-3 h-3 animate-spin" /> : label}
-      </button>
-    );
   };
 
   return (
@@ -201,13 +175,6 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
            <p className="text-slate-300 text-lg leading-relaxed font-light">
              The offline-first, zero-fee ERP designed for the next generation of Indian education.
            </p>
-           
-           <div className="mt-12 flex justify-center gap-6">
-              <div className="px-4 py-2 rounded-full bg-white/5 border border-white/10 flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                 <span className="text-xs font-bold text-white uppercase tracking-widest">System Online</span>
-              </div>
-           </div>
         </div>
       </div>
 
@@ -247,37 +214,20 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
                   <SovereignButton type="submit" isLoading={loading} className="w-full py-3 text-base font-bold shadow-lg shadow-indigo-500/20">
                     Secure Login
                   </SovereignButton>
+
+                  {isBiometricAvailable && savedSession && (
+                    <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+                       <button 
+                         type="button" 
+                         onClick={handleBiometricLogin}
+                         className="flex items-center justify-center gap-2 w-full py-3 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg font-bold transition-colors"
+                       >
+                          <Fingerprint className="w-5 h-5" /> Quick Biometric Login
+                       </button>
+                    </div>
+                  )}
                 </form>
             </div>
-
-            {/* QUICK LOGIN HUB */}
-            <div className="w-full max-w-md mt-8">
-               <div className="flex items-center gap-4 mb-5">
-                 <div className="h-px bg-gray-300 flex-1" />
-                 <span className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Instant Developer Access</span>
-                 <div className="h-px bg-gray-300 flex-1" />
-               </div>
-
-               <div className="space-y-4">
-                  {Object.entries(QUICK_LOGIN_GROUPS).map(([category, roles]) => (
-                    <div key={category} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                       <h3 className="text-xs font-bold text-slate-500 uppercase mb-3">{category}</h3>
-                       <div className="flex flex-wrap gap-2">
-                          {roles.map(r => (
-                            <QuickLoginChip key={r.role} role={r.role} label={r.label} />
-                          ))}
-                       </div>
-                    </div>
-                  ))}
-               </div>
-            </div>
-
-         </div>
-         
-         <div className="p-4 text-center">
-            <p className="text-[10px] text-gray-400 font-mono">
-              v2.5.1-stable • Sovereign Encryption Active
-            </p>
          </div>
       </div>
     </div>

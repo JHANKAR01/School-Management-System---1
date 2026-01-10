@@ -3,6 +3,8 @@ import React from 'react';
 import { getSurface, TYPOGRAPHY, INTERACTIVE, STATUS } from '../theme/design-system';
 import { useLowDataMode } from '../hooks/useLowDataMode';
 import { ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
+import { Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 // --- 1. SOVEREIGN BUTTON ---
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,21 +14,28 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const SovereignButton: React.FC<ButtonProps> = ({ 
-  children, variant = 'primary', className = '', isLoading, icon, style, ...props 
+  children, variant = 'primary', className = '', isLoading, icon, style, onClick, ...props 
 }) => {
   const baseClass = INTERACTIVE.button.base;
   const variantClass = INTERACTIVE.button[variant];
   
-  // Dynamic Primary Color support via inline style if provided, else falls back to class
   const finalStyle = variant === 'primary' && !className.includes('bg-') 
     ? { backgroundColor: 'var(--primary-color)', ...style } 
     : style;
+
+  const handlePress = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    if (onClick) onClick(e);
+  };
 
   return (
     <button 
       className={`${baseClass} ${variantClass} ${className} ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
       style={finalStyle}
       disabled={isLoading || props.disabled}
+      onClick={handlePress}
       {...props}
     >
       {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -58,7 +67,6 @@ export const SovereignInput: React.FC<InputProps> = ({ label, icon, error, class
           </div>
         )}
         <input
-          // FORCE HIGH CONTRAST: bg-white and text-gray-900. Removed bg-white/50 transparency.
           className={`block w-full rounded-lg border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2.5 shadow-sm transition-colors ${icon ? 'pl-10' : 'pl-3'} font-medium ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''} ${className}`}
           {...props}
         />
@@ -96,7 +104,6 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, trend, icon, s
   
   return (
     <div className={`${getSurface(isLowData)} rounded-xl p-6 relative overflow-hidden group border border-gray-100`}>
-      {/* Decorative Gradient Blob */}
       {!isLowData && (
         <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
       )}

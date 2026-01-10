@@ -1,14 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import LoginScreen from './apps/expo/app/login';
 import SuperAdminOnboarding from './apps/next/pages/super-admin/onboarding';
-import { SchoolConfig, UserRole, LanguageCode, User, AuthResponse } from './types';
+import { SchoolConfig, UserRole, User, AuthResponse } from './types';
 import { RoleBasedRouter } from './packages/app/features/dashboard/RoleBasedRouter';
 import { Sidebar } from './components/Sidebar';
 import { LanguageProvider, useTranslation } from './packages/app/provider/language-context';
 import { InteractionProvider } from './packages/app/provider/InteractionContext';
+import { ThemeProvider } from './packages/app/provider/ThemeProvider';
 import { useLowDataMode } from './packages/app/hooks/useLowDataMode';
-import { generatePalette } from './packages/app/utils/theme-generator';
 
 const MainLayout: React.FC<{
   user: User;
@@ -16,7 +16,7 @@ const MainLayout: React.FC<{
   onLogout: () => void;
 }> = ({ user, school, onLogout }) => {
   const { isLowData, toggleLowData } = useLowDataMode();
-  const { language, setLanguage, t } = useTranslation();
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Initialize default module based on role
@@ -55,19 +55,9 @@ const MainLayout: React.FC<{
   const [activeModule, setActiveModule] = useState(getDefaultModule());
 
   // Reset module when user role changes (if hot-swapping users)
-  useEffect(() => {
+  React.useEffect(() => {
     setActiveModule(getDefaultModule());
   }, [user.role]);
-
-  // Dynamic Theme Injection
-  useEffect(() => {
-    const palette = generatePalette(school.primary_color);
-    const root = document.documentElement;
-    Object.entries(palette).forEach(([shade, hex]) => {
-      root.style.setProperty(`--color-primary-${shade}`, hex);
-    });
-    root.style.setProperty('--primary-color', school.primary_color);
-  }, [school.primary_color]);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-900">
@@ -163,15 +153,17 @@ const App: React.FC = () => {
 
   // 3. Role-Based App Layout
   return (
-    <InteractionProvider>
-      <LanguageProvider>
-        <MainLayout 
-          user={currentUser} 
-          school={currentSchool} 
-          onLogout={handleLogout} 
-        />
-      </LanguageProvider>
-    </InteractionProvider>
+    <ThemeProvider primaryColor={currentSchool.primary_color}>
+      <InteractionProvider>
+        <LanguageProvider>
+          <MainLayout 
+            user={currentUser} 
+            school={currentSchool} 
+            onLogout={handleLogout} 
+          />
+        </LanguageProvider>
+      </InteractionProvider>
+    </ThemeProvider>
   );
 };
 
