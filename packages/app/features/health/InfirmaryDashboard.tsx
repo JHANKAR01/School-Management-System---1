@@ -1,28 +1,41 @@
 
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { PageHeader, SovereignSkeleton } from '../../components/SovereignComponents';
-import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
+import React, { useState } from 'react';
+import { useInteraction } from '../../provider/InteractionContext';
+import { PageHeader, SovereignButton, SovereignInput, SovereignBadge, StatCard } from '../../components/SovereignComponents';
+import { ActionModal } from '../../components/ActionModal';
+import { Plus, Activity, Thermometer } from 'lucide-react';
 
 export const InfirmaryDashboard = () => {
-  const { data: logs, isLoading } = useQuery({
-    queryKey: ['medical-logs'],
-    queryFn: async () => {
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return SOVEREIGN_GENESIS_DATA.medicalLogs;
-    }
-  });
+  const { medicalLogs, students, addMedicalLog } = useInteraction();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [form, setForm] = useState({ studentId: '', issue: '', action: '' });
 
-  if (isLoading) return <div className="p-6"><SovereignSkeleton className="h-64" /></div>;
+  const handleLogVisit = () => {
+    if (!form.studentId || !form.issue) return alert("Required details missing");
+    
+    const studentName = students.find(s => s.id === form.studentId)?.name || form.studentId;
+    
+    addMedicalLog({
+        student: studentName,
+        issue: form.issue,
+        action: form.action
+    });
+    
+    setModalOpen(false);
+    setForm({ studentId: '', issue: '', action: '' });
+  };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <PageHeader title="Infirmary & Health Logs" subtitle="Daily Medical Registry" />
-        <button className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700">
-          + Log Visit
-        </button>
+        <SovereignButton icon={<Plus className="w-4 h-4"/>} onClick={() => setModalOpen(true)}>Log Visit</SovereignButton>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <StatCard title="Visits Today" value={medicalLogs.filter(l => l.date === new Date().toLocaleDateString()).length} icon={<Activity className="w-5 h-5"/>} />
+        <StatCard title="Common Issue" value="Fever" icon={<Thermometer className="w-5 h-5"/>} />
+        <StatCard title="Vaccination Drive" value="45%" icon={<Activity className="w-5 h-5 text-green-600"/>} subtitle="Consent Received" />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
@@ -30,8 +43,8 @@ export const InfirmaryDashboard = () => {
           <h2 className="font-bold text-gray-700">Recent Visits</h2>
         </div>
         <div className="divide-y divide-gray-100">
-          {(logs || []).map((log: any) => (
-            <div key={log.id} className="p-4 hover:bg-gray-50">
+          {medicalLogs.map((log) => (
+            <div key={log.id} className="p-4 hover:bg-gray-50 transition-colors">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-bold text-gray-800">{log.student}</p>
@@ -45,22 +58,37 @@ export const InfirmaryDashboard = () => {
               </div>
             </div>
           ))}
-          {(!logs || logs.length === 0) && (
+          {medicalLogs.length === 0 && (
             <div className="p-4 text-center text-gray-500 text-sm">No medical logs found.</div>
           )}
         </div>
       </div>
 
-      <div className="mt-8">
-        <h2 className="font-bold text-gray-700 mb-4">Vaccination Drive Tracker</h2>
-        <div className="bg-white p-6 rounded-xl border border-gray-200 text-center">
-           <p className="text-gray-500">Upcoming Camp: <strong>Rubella Vaccination</strong> (Next Tuesday)</p>
-           <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
-              <div className="bg-green-600 h-2.5 rounded-full" style={{ width: '45%' }}></div>
+      <ActionModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Log Medical Visit"
+        onConfirm={handleLogVisit}
+        confirmLabel="Record Entry"
+      >
+        <div className="space-y-4">
+           <div>
+             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Student</label>
+             <select 
+               className="w-full border p-2 rounded bg-white"
+               value={form.studentId}
+               onChange={e => setForm({...form, studentId: e.target.value})}
+             >
+                <option value="">Select Student...</option>
+                {students.map(s => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.class})</option>
+                ))}
+             </select>
            </div>
-           <p className="text-xs text-gray-400 mt-2">45% Consent Forms Received</p>
+           <SovereignInput label="Issue / Diagnosis" placeholder="e.g. Headache" value={form.issue} onChange={e => setForm({...form, issue: e.target.value})} />
+           <SovereignInput label="Action Taken" placeholder="e.g. Rest prescribed" value={form.action} onChange={e => setForm({...form, action: e.target.value})} />
         </div>
-      </div>
+      </ActionModal>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',      // Platform Owner
   SCHOOL_ADMIN = 'SCHOOL_ADMIN',    // HR & Access Control (HR Manager)
@@ -171,6 +172,16 @@ export interface HostelRoom {
   occupied: number;
   gender: 'BOYS' | 'GIRLS';
   students: string[]; // List of Student IDs
+}
+
+// --- HEALTH ---
+export interface MedicalLog {
+  id: number;
+  time: string;
+  date: string;
+  student: string;
+  issue: string;
+  action: string;
 }
 
 // --- SECURITY & AUDIT ---

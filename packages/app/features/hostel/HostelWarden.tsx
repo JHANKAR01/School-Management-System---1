@@ -1,68 +1,84 @@
 
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { SovereignButton, SovereignSkeleton } from '../../components/SovereignComponents';
-import { SOVEREIGN_GENESIS_DATA } from '../../../api/src/data/dummy-data';
+import { useInteraction } from '../../provider/InteractionContext';
+import { SovereignButton, SovereignBadge, PageHeader } from '../../components/SovereignComponents';
+import { ActionModal } from '../../components/ActionModal';
+import { Bed } from 'lucide-react';
 
 export const HostelWarden = () => {
-  const queryClient = useQueryClient();
+  const { hostelRooms, students, allocateRoom } = useInteraction();
   const [view, setView] = useState<'ALLOCATION' | 'ATTENDANCE'>('ALLOCATION');
+  
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const [studentId, setStudentId] = useState('');
 
-  const { data: rooms, isLoading } = useQuery({
-    queryKey: ['rooms'],
-    queryFn: async () => {
-      return SOVEREIGN_GENESIS_DATA.hostel.map(h => ({
-        id: h.roomNumber,
-        number: h.roomNumber,
-        block: h.gender === 'BOYS' ? 'Cauvery (Boys)' : 'Ganga (Girls)',
-        capacity: h.capacity,
-        occupied: h.occupied
-      }));
-    }
-  });
-
-  const allocateMutation = useMutation({
-    mutationFn: async ({ room, studentId }: { room: string, studentId: string }) => {
-      console.log("[DEMO] Allocate Room:", room, studentId);
-    },
-    onSuccess: () => {
-      alert("Allocated & Fee Generated (Mock)");
-    }
-  });
-
-  const handleAllocate = (roomId: string) => {
-    const studentId = prompt("Enter Student ID to Allocate:");
-    if (studentId) allocateMutation.mutate({ room: roomId, studentId });
+  const openAllocation = (roomId: string) => {
+    setSelectedRoom(roomId);
+    setModalOpen(true);
   };
 
-  if (isLoading) return <SovereignSkeleton className="h-64" />;
+  const handleAllocate = () => {
+    if (selectedRoom && studentId) {
+        allocateRoom(selectedRoom, studentId);
+        setModalOpen(false);
+        setStudentId('');
+        setSelectedRoom(null);
+    }
+  };
+
+  const getStudentName = (id: string) => students.find(s => s.id === id)?.name || id;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden m-6">
-      <div className="flex border-b border-gray-200">
-        <button onClick={() => setView('ALLOCATION')} className={`flex-1 py-3 text-sm font-bold ${view === 'ALLOCATION' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500'}`}>Room Allocation</button>
-        <button onClick={() => setView('ATTENDANCE')} className={`flex-1 py-3 text-sm font-bold ${view === 'ATTENDANCE' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500'}`}>Night Roll Call</button>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden m-6 max-w-7xl mx-auto">
+      <div className="p-6 pb-0">
+          <PageHeader title="Hostel Management" subtitle="Room Allocation & Rolls" />
+      </div>
+
+      <div className="flex border-b border-gray-200 px-6">
+        <button onClick={() => setView('ALLOCATION')} className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors ${view === 'ALLOCATION' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500'}`}>Room Allocation</button>
+        <button onClick={() => setView('ATTENDANCE')} className={`px-4 py-3 text-sm font-bold border-b-2 transition-colors ${view === 'ATTENDANCE' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500'}`}>Night Roll Call</button>
       </div>
 
       <div className="p-6">
         {view === 'ALLOCATION' && (
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-            {rooms?.map((room: any) => (
-              <div key={room.id} className="border rounded-lg p-4 text-center bg-white">
-                <h3 className="text-lg font-bold text-gray-800">Room {room.number}</h3>
-                <p className="text-xs text-gray-500 mb-2">{room.block}</p>
-                <div className="flex justify-center gap-1 mb-3">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            {hostelRooms.map((room) => (
+              <div key={room.roomNumber} className="border rounded-lg p-4 bg-white relative">
+                <div className="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-800">Room {room.roomNumber}</h3>
+                        <p className="text-xs text-gray-500">{room.gender === 'BOYS' ? 'Boys Wing' : 'Girls Wing'}</p>
+                    </div>
+                    <SovereignBadge status={room.occupied === room.capacity ? 'error' : 'success'}>
+                        {room.occupied}/{room.capacity}
+                    </SovereignBadge>
+                </div>
+
+                <div className="flex gap-1 mb-4">
                   {Array.from({ length: room.capacity }).map((_, i) => (
-                    <div key={i} className={`w-4 h-6 rounded-sm ${i < room.occupied ? 'bg-indigo-600' : 'bg-gray-200'}`} />
+                    <div key={i} className={`h-1.5 flex-1 rounded-full ${i < room.occupied ? 'bg-indigo-600' : 'bg-gray-200'}`} />
                   ))}
                 </div>
+                
+                <div className="mb-4 min-h-[40px]">
+                    <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Occupants</p>
+                    <div className="flex flex-wrap gap-1">
+                        {room.students.map(s => (
+                            <span key={s} className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-600" title={getStudentName(s)}>
+                                {getStudentName(s).split(' ')[0]}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
                 <SovereignButton 
-                  onClick={() => handleAllocate(room.id)}
+                  onClick={() => openAllocation(room.roomNumber)}
                   disabled={room.occupied === room.capacity}
                   variant="secondary"
                   className="w-full text-xs"
                 >
-                  {room.occupied === room.capacity ? 'FULL' : '+ Allocate'}
+                  {room.occupied === room.capacity ? 'Full' : '+ Allocate Bed'}
                 </SovereignButton>
               </div>
             ))}
@@ -70,11 +86,38 @@ export const HostelWarden = () => {
         )}
 
         {view === 'ATTENDANCE' && (
-           <div className="p-8 text-center text-gray-500">
-             Attendance Module Linked to Biometric Entry. Syncs automatically at 9 PM.
+           <div className="p-12 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+             <Bed className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+             <p>Attendance Module Linked to Biometric Entry.</p>
+             <p className="text-xs mt-1">Syncs automatically at 9:00 PM.</p>
            </div>
         )}
       </div>
+
+      {/* Allocation Modal */}
+      <ActionModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={`Allocate Bed: Room ${selectedRoom}`}
+        onConfirm={handleAllocate}
+        confirmLabel="Assign Room"
+      >
+         <div className="space-y-4">
+            <div>
+             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Select Student</label>
+             <select 
+               className="w-full border p-2 rounded bg-white"
+               value={studentId}
+               onChange={e => setStudentId(e.target.value)}
+             >
+                <option value="">Choose Student...</option>
+                {students.map(s => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.class})</option>
+                ))}
+             </select>
+           </div>
+         </div>
+      </ActionModal>
     </div>
   );
 };

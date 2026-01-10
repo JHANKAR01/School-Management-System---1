@@ -1,6 +1,7 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SOVEREIGN_GENESIS_DATA } from '../../api/src/data/dummy-data';
-import { UserRole, Invoice, Bus } from '../../../types';
+import { UserRole, Invoice, Bus, Book, HostelRoom, MedicalLog } from '../../../types';
 
 // --- ACADEMIC TYPES ---
 export interface Homework {
@@ -29,6 +30,13 @@ export interface Exam {
   startDate: string;
   endDate: string;
   classes: string[];
+}
+
+export interface StudentProfile {
+    id: string;
+    name: string;
+    class: string;
+    roll: number;
 }
 
 // --- OPERATIONS TYPES ---
@@ -100,6 +108,7 @@ export interface InteractionContextType {
   liveClasses: Record<string, boolean>;
   syllabus: typeof SOVEREIGN_GENESIS_DATA.syllabus;
   exams: Exam[];
+  students: StudentProfile[];
   
   // Operations Data
   inquiries: Inquiry[];
@@ -113,8 +122,11 @@ export interface InteractionContextType {
   invoices: Invoice[];
   expenses: Expense[];
 
-  // Fleet Data
+  // Facilities Data
   buses: LiveBus[];
+  books: Book[];
+  medicalLogs: MedicalLog[];
+  hostelRooms: HostelRoom[];
 
   // Academic Actions
   addHomework: (hw: Omit<Homework, 'id' | 'status'>) => void;
@@ -141,9 +153,20 @@ export interface InteractionContextType {
   markInvoicePaid: (id: string, method: 'CASH' | 'CHEQUE' | 'ONLINE') => void;
   addExpense: (exp: Omit<Expense, 'id' | 'date'>) => void;
 
-  // Fleet Actions
+  // Facilities Actions
   updateBusStatus: (id: string, status: LiveBus['status']) => void;
   assignBusDriver: (busId: string, driverName: string) => void;
+  
+  // Library Actions
+  addBook: (book: Book) => void;
+  issueBook: (isbn: string, studentId: string) => void;
+  returnBook: (isbn: string) => void;
+
+  // Health Actions
+  addMedicalLog: (log: Omit<MedicalLog, 'id' | 'time' | 'date'>) => void;
+
+  // Hostel Actions
+  allocateRoom: (roomNumber: string, studentId: string) => void;
 }
 
 const InteractionContext = createContext<InteractionContextType | undefined>(undefined);
@@ -159,6 +182,7 @@ export const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [liveClasses, setLiveClasses] = useState<Record<string, boolean>>({});
   const [syllabus, setSyllabus] = useState(SOVEREIGN_GENESIS_DATA.syllabus);
   const [exams, setExams] = useState<Exam[]>([]);
+  const [students, setStudents] = useState<StudentProfile[]>(SOVEREIGN_GENESIS_DATA.students);
 
   // --- OPERATIONS STATE ---
   const [inquiries, setInquiries] = useState<Inquiry[]>([
@@ -181,7 +205,7 @@ export const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     { id: 'exp_1', category: 'UTILITY', amount: 15000, description: 'Electricity Bill Oct', date: '2023-10-25' }
   ]);
 
-  // --- FLEET STATE ---
+  // --- FACILITIES STATE ---
   const [buses, setBuses] = useState<LiveBus[]>(
     SOVEREIGN_GENESIS_DATA.buses.map(b => ({
       ...b,
@@ -191,6 +215,10 @@ export const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ c
       speed: 0
     }))
   );
+  const [books, setBooks] = useState<Book[]>(SOVEREIGN_GENESIS_DATA.books);
+  const [medicalLogs, setMedicalLogs] = useState<MedicalLog[]>(SOVEREIGN_GENESIS_DATA.medicalLogs);
+  const [hostelRooms, setHostelRooms] = useState<HostelRoom[]>(SOVEREIGN_GENESIS_DATA.hostel);
+
 
   // --- FLEET SIMULATION EFFECT ---
   useEffect(() => {
@@ -278,22 +306,50 @@ export const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setExpenses(prev => [{ ...exp, id: `exp_${Date.now()}`, date: new Date().toLocaleDateString() }, ...prev]);
   };
 
-  // --- FLEET ACTIONS ---
+  // --- FACILITIES ACTIONS ---
   const updateBusStatus = (id: string, status: LiveBus['status']) => {
     setBuses(prev => prev.map(b => b.id === id ? { ...b, status } : b));
   };
   const assignBusDriver = (busId: string, driverName: string) => {
     setBuses(prev => prev.map(b => b.id === busId ? { ...b, driverName } : b));
   };
+  
+  // Library
+  const addBook = (book: Book) => setBooks(prev => [...prev, book]);
+  const issueBook = (isbn: string, studentId: string) => {
+    setBooks(prev => prev.map(b => b.isbn === isbn ? { ...b, status: 'ISSUED', issuedTo: studentId } : b));
+  };
+  const returnBook = (isbn: string) => {
+    setBooks(prev => prev.map(b => b.isbn === isbn ? { ...b, status: 'AVAILABLE', issuedTo: undefined } : b));
+  };
+
+  // Health
+  const addMedicalLog = (log: Omit<MedicalLog, 'id' | 'time' | 'date'>) => {
+    setMedicalLogs(prev => [{ ...log, id: Date.now(), date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() }, ...prev]);
+  };
+
+  // Hostel
+  const allocateRoom = (roomNumber: string, studentId: string) => {
+    setHostelRooms(prev => prev.map(r => {
+        if (r.roomNumber === roomNumber && r.occupied < r.capacity) {
+            return { ...r, occupied: r.occupied + 1, students: [...r.students, studentId] };
+        }
+        return r;
+    }));
+  };
 
   return (
     <InteractionContext.Provider value={{
-      homeworks, leaves, liveClasses, syllabus, exams,
+      homeworks, leaves, liveClasses, syllabus, exams, students,
       inquiries, visitors, tickets, gateLogs, localStaff, lockdownMode,
-      invoices, expenses, buses,
+      invoices, expenses,
+      buses, books, medicalLogs, hostelRooms,
       addHomework, submitHomework, applyLeave, updateLeaveStatus, toggleLiveClass, approveSyllabus, addExam,
       addInquiry, convertInquiry, addVisitor, approveVisitor, addTicket, resolveTicket, logGateEntry, addStaff, toggleLockdown,
-      addInvoice, markInvoicePaid, addExpense, updateBusStatus, assignBusDriver
+      addInvoice, markInvoicePaid, addExpense,
+      updateBusStatus, assignBusDriver,
+      addBook, issueBook, returnBook,
+      addMedicalLog, allocateRoom
     }}>
       {children}
     </InteractionContext.Provider>
