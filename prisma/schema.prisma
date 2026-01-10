@@ -1,1 +1,139 @@
-�
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  SCHOOL_ADMIN
+  PRINCIPAL
+  VICE_PRINCIPAL
+  HOD
+  FINANCE_MANAGER
+  FLEET_MANAGER
+  ADMISSIONS_OFFICER
+  EXAM_CELL
+  LIBRARIAN
+  WARDEN
+  NURSE
+  INVENTORY_MANAGER
+  RECEPTIONIST
+  IT_ADMIN
+  SECURITY_HEAD
+  ESTATE_MANAGER
+  COUNSELOR
+  TEACHER
+  ACCOUNTANT
+  PARENT
+  STUDENT
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String
+  role       UserRole
+  school_id  String
+  department String?
+  
+  @@index([school_id])
+}
+
+model Student {
+  id           String   @id @default(cuid())
+  name         String
+  class        String
+  roll         Int
+  parent_phone String
+  school_id    String
+  invoices     Invoice[]
+  attendance   Attendance[]
+  
+  @@index([school_id])
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  student_id      String
+  student         Student       @relation(fields: [student_id], references: [id])
+  amount          Float
+  base_amount     Float
+  discount_amount Float
+  discount_reason String?
+  description     String
+  due_date        DateTime
+  status          InvoiceStatus @default(PENDING)
+  utr             String?
+  school_id       String
+
+  @@index([school_id])
+}
+
+enum InvoiceStatus {
+  PENDING
+  VERIFIED
+  PAID
+}
+
+model Attendance {
+  id         String           @id @default(cuid())
+  student_id String
+  student    Student          @relation(fields: [student_id], references: [id])
+  date       DateTime
+  status     AttendanceStatus
+  synced     Boolean          @default(false)
+  school_id  String
+
+  @@index([school_id])
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+model Book {
+  isbn     String     @id
+  title    String
+  author   String
+  status   BookStatus @default(AVAILABLE)
+  dueDate  DateTime?
+  issuedTo String?
+}
+
+enum BookStatus {
+  AVAILABLE
+  ISSUED
+}
+
+model Bus {
+  id              String   @id @default(cuid())
+  plateNumber     String
+  driverName      String
+  capacity        Int
+  routeId         String
+  insuranceExpiry DateTime
+  school_id       String
+
+  @@index([school_id])
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  school_id  String
+  timestamp  DateTime    @default(now())
+  action     String
+  entity     String
+  entity_id  String?
+  actor_id   String
+  details    String
+  ip_hash    String
+  old_data   Json?
+  new_data   Json?
+
+  @@index([school_id])
+}
