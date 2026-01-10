@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SOVEREIGN_GENESIS_DATA } from '../../api/src/data/dummy-data';
-import { UserRole } from '../../../types';
+import { UserRole, Invoice, Bus } from '../../../types';
 
 // --- ACADEMIC TYPES ---
 export interface Homework {
@@ -76,6 +76,23 @@ export interface LocalStaff {
   joinedAt: string;
 }
 
+// --- FINANCE TYPES ---
+export interface Expense {
+  id: string;
+  category: 'UTILITY' | 'VENDOR' | 'SALARY' | 'MAINTENANCE';
+  amount: number;
+  description: string;
+  date: string;
+}
+
+// --- FLEET TYPES ---
+export interface LiveBus extends Bus {
+  status: 'IDLE' | 'ON_ROUTE' | 'MAINTENANCE';
+  lat: number;
+  lng: number;
+  speed: number;
+}
+
 export interface InteractionContextType {
   // Academic Data
   homeworks: Homework[];
@@ -91,6 +108,13 @@ export interface InteractionContextType {
   gateLogs: GateLog[];
   localStaff: LocalStaff[];
   lockdownMode: boolean;
+
+  // Finance Data
+  invoices: Invoice[];
+  expenses: Expense[];
+
+  // Fleet Data
+  buses: LiveBus[];
 
   // Academic Actions
   addHomework: (hw: Omit<Homework, 'id' | 'status'>) => void;
@@ -111,6 +135,15 @@ export interface InteractionContextType {
   logGateEntry: (entry: Omit<GateLog, 'id' | 'time' | 'date'>) => void;
   addStaff: (staff: Omit<LocalStaff, 'id'>) => void;
   toggleLockdown: () => void;
+
+  // Finance Actions
+  addInvoice: (inv: Omit<Invoice, 'id' | 'status'>) => void;
+  markInvoicePaid: (id: string, method: 'CASH' | 'CHEQUE' | 'ONLINE') => void;
+  addExpense: (exp: Omit<Expense, 'id' | 'date'>) => void;
+
+  // Fleet Actions
+  updateBusStatus: (id: string, status: LiveBus['status']) => void;
+  assignBusDriver: (busId: string, driverName: string) => void;
 }
 
 const InteractionContext = createContext<InteractionContextType | undefined>(undefined);
@@ -141,6 +174,44 @@ export const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }))
   );
   const [lockdownMode, setLockdownMode] = useState(false);
+
+  // --- FINANCE STATE ---
+  const [invoices, setInvoices] = useState<Invoice[]>(SOVEREIGN_GENESIS_DATA.invoices);
+  const [expenses, setExpenses] = useState<Expense[]>([
+    { id: 'exp_1', category: 'UTILITY', amount: 15000, description: 'Electricity Bill Oct', date: '2023-10-25' }
+  ]);
+
+  // --- FLEET STATE ---
+  const [buses, setBuses] = useState<LiveBus[]>(
+    SOVEREIGN_GENESIS_DATA.buses.map(b => ({
+      ...b,
+      status: 'IDLE',
+      lat: 28.6139,
+      lng: 77.2090,
+      speed: 0
+    }))
+  );
+
+  // --- FLEET SIMULATION EFFECT ---
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBuses(prevBuses => prevBuses.map(bus => {
+        if (bus.status === 'ON_ROUTE') {
+          // Simulate simple movement: zigzag slightly
+          const deltaLat = (Math.random() - 0.5) * 0.001;
+          const deltaLng = (Math.random() - 0.5) * 0.001;
+          return {
+            ...bus,
+            lat: bus.lat + deltaLat,
+            lng: bus.lng + deltaLng,
+            speed: Math.floor(Math.random() * 40) + 10 // 10-50 km/h
+          };
+        }
+        return { ...bus, speed: 0 };
+      }));
+    }, 5000); // Update every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // --- ACADEMIC ACTIONS ---
   const addHomework = (hw: Omit<Homework, 'id' | 'status'>) => {
@@ -196,12 +267,33 @@ export const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setLockdownMode(prev => !prev);
   };
 
+  // --- FINANCE ACTIONS ---
+  const addInvoice = (inv: Omit<Invoice, 'id' | 'status'>) => {
+    setInvoices(prev => [{ ...inv, id: `INV-${Date.now()}`, status: 'PENDING' }, ...prev]);
+  };
+  const markInvoicePaid = (id: string, method: 'CASH' | 'CHEQUE' | 'ONLINE') => {
+    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, status: 'PAID' } : inv));
+  };
+  const addExpense = (exp: Omit<Expense, 'id' | 'date'>) => {
+    setExpenses(prev => [{ ...exp, id: `exp_${Date.now()}`, date: new Date().toLocaleDateString() }, ...prev]);
+  };
+
+  // --- FLEET ACTIONS ---
+  const updateBusStatus = (id: string, status: LiveBus['status']) => {
+    setBuses(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+  };
+  const assignBusDriver = (busId: string, driverName: string) => {
+    setBuses(prev => prev.map(b => b.id === busId ? { ...b, driverName } : b));
+  };
+
   return (
     <InteractionContext.Provider value={{
       homeworks, leaves, liveClasses, syllabus, exams,
       inquiries, visitors, tickets, gateLogs, localStaff, lockdownMode,
+      invoices, expenses, buses,
       addHomework, submitHomework, applyLeave, updateLeaveStatus, toggleLiveClass, approveSyllabus, addExam,
-      addInquiry, convertInquiry, addVisitor, approveVisitor, addTicket, resolveTicket, logGateEntry, addStaff, toggleLockdown
+      addInquiry, convertInquiry, addVisitor, approveVisitor, addTicket, resolveTicket, logGateEntry, addStaff, toggleLockdown,
+      addInvoice, markInvoicePaid, addExpense, updateBusStatus, assignBusDriver
     }}>
       {children}
     </InteractionContext.Provider>

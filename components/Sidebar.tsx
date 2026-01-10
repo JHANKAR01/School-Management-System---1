@@ -2,7 +2,6 @@
 import React from 'react';
 import { UserRole, SchoolConfig } from '../types';
 import { useLowDataMode } from '../packages/app/hooks/useLowDataMode';
-import { getSurface } from '../packages/app/theme/design-system';
 
 interface SidebarProps {
   role: UserRole;
@@ -28,42 +27,122 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose
 }) => {
   const { isLowData } = useLowDataMode();
+  const { features } = school;
   
-  // Strict Departmental Isolation Logic
+  // Comprehensive Menu Logic Mapping to App.tsx Default Modules
   const getMenuItems = (): MenuItem[] => {
+    let items: MenuItem[] = [];
+
     switch(role) {
       case UserRole.SCHOOL_ADMIN: // HR Manager
-        return [
+        items = [
           { id: 'STAFF_MGMT', label: 'Staff & HR', icon: '👥' },
           { id: 'ACCESS_LOGS', label: 'Audit Logs', icon: '🛡️' },
           { id: 'SETTINGS', label: 'School Settings', icon: '⚙️' },
         ];
+        break;
       
       case UserRole.PRINCIPAL: // Academic Head
-        return [
+        items = [
           { id: 'OVERVIEW', label: 'School Overview', icon: '📊' },
           { id: 'CLASSROOMS', label: 'Classrooms', icon: '🏫' },
           { id: 'RESULTS', label: 'Publish Results', icon: '📢' },
-          { id: 'ATTENDANCE_REP', label: 'Attendance Reports', icon: '📋' },
         ];
+        if (features.attendance) items.push({ id: 'ATTENDANCE_REP', label: 'Attendance Reports', icon: '📋' });
+        break;
+
+      case UserRole.VICE_PRINCIPAL:
+        items = [
+            { id: 'TIMETABLES', label: 'Substitutions', icon: '📅' }, // Matches App.tsx default
+            { id: 'SCHEDULES', label: 'Timetables', icon: '🕒' }
+        ];
+        break;
 
       case UserRole.FINANCE_MANAGER: // Accountant
-        return [
-          { id: 'COLLECTIONS', label: 'Fee Collections', icon: '💰' },
-          { id: 'RECONCILIATION', label: 'Bank Reconcile', icon: '🏦' },
-          { id: 'PAYROLL', label: 'Staff Payroll', icon: '💸' },
-        ];
+        if (features.fees) {
+          items = [
+            { id: 'COLLECTIONS', label: 'Fee Collections', icon: '💰' },
+            { id: 'RECONCILIATION', label: 'Bank Reconcile', icon: '🏦' },
+            { id: 'PAYROLL', label: 'Staff Payroll', icon: '💸' },
+          ];
+        }
+        break;
       
-      // ... (Keeping generic default for brevity in this update, assumes previous switch cases exist)
-      // For this refactor, focusing on visual shell.
+      case UserRole.TEACHER: 
+         if (features.attendance) items.push({ id: 'ATTENDANCE', label: 'Attendance', icon: '📋' });
+         items.push({ id: 'GRADEBOOK', label: 'Gradebook', icon: '📝' });
+         if (features.library) items.push({ id: 'LIBRARY', label: 'Library', icon: '📚' });
+         break;
+
+      case UserRole.PARENT:
+      case UserRole.STUDENT:
+         if (role === UserRole.STUDENT) items.push({ id: 'TIMETABLE', label: 'My Classes', icon: '🎓' });
+         else items.push({ id: 'FEES', label: 'Fees & Dues', icon: '💳' });
+         
+         if (features.fees && role === UserRole.STUDENT) items.push({ id: 'FEES', label: 'Fees', icon: '💳' });
+         if (features.transport) items.push({ id: 'TRACKING', label: 'Bus Tracking', icon: '🚌' });
+         items.push({ id: 'REPORT', label: 'Report Card', icon: '📄' });
+         break;
+
+      case UserRole.FLEET_MANAGER:
+          if (features.transport) items.push({ id: 'LIVE_TRACKING', label: 'Live Tracking', icon: '🚌' });
+          break;
+
+      case UserRole.LIBRARIAN:
+          if (features.library) items.push({ id: 'CIRCULATION', label: 'Circulation Desk', icon: '📚' });
+          break;
+
+      case UserRole.WARDEN:
+          if (features.hostel) items.push({ id: 'ALLOCATION', label: 'Room Allocation', icon: '🛏️' });
+          break;
+
+      case UserRole.NURSE:
+          items.push({ id: 'MEDICAL_LOGS', label: 'Health Logs', icon: '🏥' });
+          break;
+
+      case UserRole.SECURITY_HEAD:
+          items.push({ id: 'GATE_MGMT', label: 'Gate Logs', icon: '🛡️' });
+          break;
+
+      case UserRole.ESTATE_MANAGER:
+          items.push({ id: 'MAINTENANCE_TICKETS', label: 'Maintenance', icon: '🔧' });
+          break;
+
+      case UserRole.RECEPTIONIST:
+          items.push({ id: 'VISITOR_LOGS', label: 'Front Desk', icon: '🛎️' });
+          break;
+
+      case UserRole.ADMISSIONS_OFFICER:
+          items.push({ id: 'INQUIRIES', label: 'CRM', icon: '🤝' });
+          break;
+
+      case UserRole.INVENTORY_MANAGER:
+          items.push({ id: 'STOCK_REGISTRY', label: 'Inventory', icon: '📦' });
+          break;
+
+      case UserRole.HOD:
+          items.push({ id: 'SYLLABUS', label: 'Dept. Progress', icon: '📈' });
+          break;
+      
+      case UserRole.EXAM_CELL:
+          items.push({ id: 'EXAM_SCHEDULE', label: 'Papers & Logistics', icon: '🖨️' });
+          break;
+
+      case UserRole.COUNSELOR:
+          items.push({ id: 'STUDENT_WELLNESS', label: 'Student Wellness', icon: '🧠' });
+          break;
+
+      case UserRole.IT_ADMIN:
+          items.push({ id: 'SYSTEM_HEALTH', label: 'Infrastructure', icon: '🖥️' });
+          break;
       
       default:
-        // Expanded Default Set for demo
-        return [
+        items = [
           { id: 'HOME', label: 'Home', icon: '🏠' },
           { id: 'PROFILE', label: 'My Profile', icon: '👤' },
         ];
     }
+    return items;
   };
 
   const menuItems = getMenuItems();
