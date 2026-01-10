@@ -6,6 +6,7 @@ import { SchoolConfig, UserRole, LanguageCode, User, AuthResponse } from './type
 import { RoleBasedRouter } from './packages/app/features/dashboard/RoleBasedRouter';
 import { Sidebar } from './components/Sidebar';
 import { LanguageProvider, useTranslation } from './packages/app/provider/language-context';
+import { InteractionProvider } from './packages/app/provider/InteractionContext';
 import { useLowDataMode } from './packages/app/hooks/useLowDataMode';
 import { generatePalette } from './packages/app/utils/theme-generator';
 
@@ -162,13 +163,15 @@ const App: React.FC = () => {
 
   // 3. Role-Based App Layout
   return (
-    <LanguageProvider>
-      <MainLayout 
-        user={currentUser} 
-        school={currentSchool} 
-        onLogout={handleLogout} 
-      />
-    </LanguageProvider>
+    <InteractionProvider>
+      <LanguageProvider>
+        <MainLayout 
+          user={currentUser} 
+          school={currentSchool} 
+          onLogout={handleLogout} 
+        />
+      </LanguageProvider>
+    </InteractionProvider>
   );
 };
 

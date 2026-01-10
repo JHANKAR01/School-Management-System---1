@@ -20,8 +20,8 @@ import { ReceptionDashboard } from '../admin/ReceptionDashboard';
 import { InventoryDashboard } from '../inventory/InventoryDashboard';
 import { InfirmaryDashboard } from '../health/InfirmaryDashboard';
 import { AdmissionsDashboard } from '../admissions/AdmissionsDashboard';
-import { CounselorDashboard } from '../health/CounselorDashboard'; // New
-import { ITAdminDashboard } from '../admin/ITAdminDashboard'; // New
+import { CounselorDashboard } from '../health/CounselorDashboard';
+import { ITAdminDashboard } from '../admin/ITAdminDashboard';
 
 // Facilities
 import { BusFleet } from '../transport/BusFleet';
@@ -69,7 +69,7 @@ export const RoleBasedRouter: React.FC<Props> = ({ role, school, activeModule })
     // End Users
     case UserRole.PARENT: 
     case UserRole.STUDENT:
-        return <ParentDashboard school={school} activeModule={activeModule} />;
+        return <ParentDashboard school={school} activeModule={activeModule} role={role} />;
     
     // Fallback for unmapped roles
     default: return (
