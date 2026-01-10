@@ -185,11 +185,35 @@ export const DUMMY_BOOKS: Book[] = [
   { isbn: '978-10', title: 'White Tiger', author: 'Aravind Adiga', status: 'ISSUED', issuedTo: 'std_18' },
 ];
 
-// --- 7. BUSES ---
-export const DUMMY_BUSES: Bus[] = [
-  { id: 'bus_1', plateNumber: 'MP-09-0001', driverName: 'Ramesh Singh', capacity: 40, routeId: 'R-01', insuranceExpiry: '2026-01-01T00:00:00Z', school_id: SCHOOL_ID_1 },
-  { id: 'bus_2', plateNumber: 'MP-09-0002', driverName: 'Suresh Kumar', capacity: 35, routeId: 'R-02', insuranceExpiry: '2026-02-01T00:00:00Z', school_id: SCHOOL_ID_1 },
-  { id: 'bus_3', plateNumber: 'MP-09-0003', driverName: 'Mahesh Yadav', capacity: 50, routeId: 'R-03', insuranceExpiry: '2026-03-01T00:00:00Z', school_id: SCHOOL_ID_1 }
+// --- 7. BUSES (Matching Schema Requirements) ---
+export const DUMMY_BUSES = [
+  { 
+    id: 'bus_1', 
+    plateNumber: 'MP-09-0001', 
+    driverName: 'Ramesh Singh', 
+    capacity: 40, 
+    routeId: 'R-01', 
+    insuranceExpiry: '2026-01-01T00:00:00Z', 
+    school_id: SCHOOL_ID_1 
+  },
+  { 
+    id: 'bus_2', 
+    plateNumber: 'MP-09-0002', 
+    driverName: 'Suresh Kumar', 
+    capacity: 35, 
+    routeId: 'R-02', 
+    insuranceExpiry: '2026-02-01T00:00:00Z', 
+    school_id: SCHOOL_ID_1 
+  },
+  { 
+    id: 'bus_3', 
+    plateNumber: 'MP-09-0003', 
+    driverName: 'Mahesh Yadav', 
+    capacity: 50, 
+    routeId: 'R-03', 
+    insuranceExpiry: '2026-03-01T00:00:00Z', 
+    school_id: SCHOOL_ID_1 
+  }
 ];
 
 // --- 8. HOSTEL ---
@@ -199,13 +223,61 @@ export const DUMMY_HOSTEL: HostelRoom[] = [
   { roomNumber: '201', capacity: 4, occupied: 2, gender: 'GIRLS', students: ['std_2', 'std_4'] },
 ];
 
-// --- 9. INVOICES ---
-export const DUMMY_INVOICES: Invoice[] = [
-  { id: 'INV-001', student_id: 'std_1', base_amount: 5000, discount_amount: 0, description: 'Term 1 Fees', due_date: '2026-04-10T00:00:00Z', status: 'PAID', utr: 'UPI123456789012', school_id: SCHOOL_ID_1 },
-  { id: 'INV-002', student_id: 'std_2', base_amount: 5000, discount_amount: 0, description: 'Term 1 Fees', due_date: '2026-04-10T00:00:00Z', status: 'PENDING', school_id: SCHOOL_ID_1 },
-  { id: 'INV-003', student_id: 'std_3', base_amount: 2500, discount_amount: 0, description: 'Bus Fees', due_date: '2026-04-10T00:00:00Z', status: 'VERIFIED', utr: 'NEFT0987654321', school_id: SCHOOL_ID_1 },
-  { id: 'INV-004', student_id: 'std_4', base_amount: 5000, discount_amount: 0, description: 'Term 1 Fees', due_date: '2026-04-10T00:00:00Z', status: 'PENDING', school_id: SCHOOL_ID_1 },
-  { id: 'INV-005', student_id: 'std_5', base_amount: 5000, discount_amount: 0, description: 'Term 1 Fees', due_date: '2026-04-10T00:00:00Z', status: 'PAID', utr: 'UPI987654321098', school_id: SCHOOL_ID_1 },
+// --- 9. INVOICES (Matching Schema Naming) ---
+export const DUMMY_INVOICES = [
+  { 
+    id: 'INV-001', 
+    student_id: 'std_1', 
+    base_amount: 5000, 
+    discount_amount: 0, 
+    description: 'Term 1 Fees', 
+    due_date: '2026-04-10T00:00:00Z', 
+    status: 'PAID', 
+    utr: 'UPI123456789012', 
+    school_id: SCHOOL_ID_1 
+  },
+  { 
+    id: 'INV-002', 
+    student_id: 'std_2', 
+    base_amount: 5000, 
+    discount_amount: 0, 
+    description: 'Term 1 Fees', 
+    due_date: '2026-04-10T00:00:00Z', 
+    status: 'PENDING', 
+    school_id: SCHOOL_ID_1 
+  },
+  { 
+    id: 'INV-003', 
+    student_id: 'std_3', 
+    base_amount: 2500, 
+    discount_amount: 0, 
+    description: 'Bus Fees', 
+    due_date: '2026-04-10T00:00:00Z', 
+    status: 'VERIFIED', 
+    utr: 'NEFT0987654321', 
+    school_id: SCHOOL_ID_1 
+  },
+  { 
+    id: 'INV-004', 
+    student_id: 'std_4', 
+    base_amount: 5000, 
+    discount_amount: 0, 
+    description: 'Term 1 Fees', 
+    due_date: '2026-04-10T00:00:00Z', 
+    status: 'PENDING', 
+    school_id: SCHOOL_ID_1 
+  },
+  { 
+    id: 'INV-005', 
+    student_id: 'std_5', 
+    base_amount: 5000, 
+    discount_amount: 0, 
+    description: 'Term 1 Fees', 
+    due_date: '2026-04-10T00:00:00Z', 
+    status: 'PAID', 
+    utr: 'UPI987654321098', 
+    school_id: SCHOOL_ID_1 
+  }
 ];
 
 // --- 10. HOMEWORK ---
