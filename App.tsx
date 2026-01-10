@@ -21,8 +21,7 @@ const MainLayout: React.FC<{
   const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
-  // Initialize default module based on role
-  const getDefaultModule = () => {
+  const defaultModule = React.useMemo(() => {
     switch(user.role) {
       // Management
       case UserRole.SCHOOL_ADMIN: return 'STAFF_MGMT';
@@ -52,14 +51,14 @@ const MainLayout: React.FC<{
       
       default: return 'HOME';
     }
-  };
+  }, [user.role]);
 
-  const [activeModule, setActiveModule] = useState(getDefaultModule());
+  const [activeModule, setActiveModule] = useState(defaultModule);
 
   // Reset module when user role changes (if hot-swapping users)
   React.useEffect(() => {
-    setActiveModule(getDefaultModule());
-  }, [user.role]);
+    setActiveModule(defaultModule);
+  }, [user.role, defaultModule]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F9FAFB' }}>

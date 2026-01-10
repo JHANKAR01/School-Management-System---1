@@ -133,7 +133,7 @@ export const DUMMY_RECEPTION_VISITORS = [
 export const DUMMY_TICKETS = [
     { id: 'T-101', location: 'Chemistry Lab', issue: 'Leaking Tap', priority: 'MEDIUM', status: 'OPEN', reportedBy: 'HOD Science' },
     { id: 'T-102', location: 'Class 5-B', issue: 'Broken Bench', priority: 'LOW', status: 'ASSIGNED', reportedBy: 'Class Teacher' },
-    { id: 'T-103', location: 'Server Room', issue: 'AC Malfunction', priority: 'CRITICAL', status: 'PENDING', reportedBy: 'IT Admin' },
+    { id: 'T-103', location: 'Server Room', issue: 'AC Malfunction', priority: 'CRITICAL', status: 'OPEN', reportedBy: 'IT Admin' },
     { id: 'T-104', location: 'Girls Washroom', issue: 'Light not working', priority: 'HIGH', status: 'RESOLVED', reportedBy: 'Housekeeping' },
     { id: 'T-105', location: 'Library', issue: 'Fan noisy', priority: 'LOW', status: 'OPEN', reportedBy: 'Librarian' },
 ];

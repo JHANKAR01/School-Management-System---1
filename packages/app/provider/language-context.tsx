@@ -71,7 +71,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Load from local storage on mount (simulated)
   useEffect(() => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const saved = localStorage.getItem('sovereign_lang') as LanguageCode;
       if (saved && DICTIONARIES[saved]) {
         setLanguage(saved);

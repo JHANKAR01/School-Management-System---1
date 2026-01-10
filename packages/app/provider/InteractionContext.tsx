@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { View } from 'react-native';
 import { SOVEREIGN_GENESIS_DATA } from '../../api/src/data/dummy-data';
 import { UserRole, Invoice, Bus, Book, HostelRoom, MedicalLog } from '../../../types';
 
@@ -62,7 +63,7 @@ export interface Ticket {
   location: string;
   issue: string;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  status: 'OPEN' | 'RESOLVED' | 'ASSIGNED';
+  status: 'OPEN' | 'RESOLVED' | 'ASSIGNED' | 'PENDING';
   reportedBy: string;
 }
 
@@ -283,7 +284,7 @@ export const InteractionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setTickets(prev => [{ ...ticket, id: `T-${Date.now()}`, status: 'OPEN' }, ...prev]);
   };
   const resolveTicket = (id: string) => {
-    setTickets(prev => prev.map(t => t.id === id ? { ...t, status: t.status === 'RESOLVED' ? 'OPEN' : 'RESOLVED' } : t));
+    setTickets(prev => prev.map(t => t.id === id ? { ...t, status: t.status === 'RESOLVED' ? 'PENDING' : 'RESOLVED' } : t));
   };
   const logGateEntry = (entry: Omit<GateLog, 'id' | 'time' | 'date'>) => {
     setGateLogs(prev => [{ ...entry, id: Date.now(), time: new Date().toLocaleTimeString(), date: new Date().toLocaleDateString() }, ...prev]);
