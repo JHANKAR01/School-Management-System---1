@@ -1,89 +1,70 @@
 
-// import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 /**
- * MOCK PRISMA CLIENT
- * Handles environment where `prisma generate` has not run.
- */
-class PrismaClient {
-  $extends(args: any) { return this; }
-  async $transaction(args: any) { 
-    // Mock Transaction execution
-    if(Array.isArray(args)) {
-        return Promise.all(args);
-    }
-    return args(this);
-  }
-  $executeRaw(query: any, ...args: any[]) { return Promise.resolve(); }
-  
-  user = {
-    findMany: async (...args: any) => [],
-    create: async (...args: any) => ({ id: 'mock-user-id', username: 'mock-user' }),
-    update: async (...args: any) => ({}),
-    delete: async (...args: any) => ({}),
-  };
-  student = {
-    findUnique: async (...args: any) => null,
-    findMany: async (...args: any) => [],
-    create: async (...args: any) => ({}),
-  };
-  invoice = {
-    findUnique: async (...args: any) => null,
-    create: async (...args: any) => ({}),
-  };
-  inquiry = {
-    findMany: async (...args: any) => [],
-    create: async (...args: any) => ({}),
-  };
-  auditLog = {
-    create: async (...args: any) => ({}),
-  }
-}
-
-/**
- * Sovereign DB Factory
- * Wraps the standard Prisma Client to enforce Row-Level Security (RLS).
- * 
- * CONCEPT:
- * PostgreSQL RLS works by checking a session variable.
- * We hijack every transaction to set 'app.current_school_id' before execution.
+ * Sovereign DB Setup
+ * Connects to the live Supabase database via connection pooling.
  */
 
-const globalPrisma = new PrismaClient();
+const globalPrisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
+
+export default globalPrisma;
 
 export type SovereignDB = ReturnType<typeof getTenantDB>;
 
+/**
+ * Tenant-Aware DB Factory
+ * Wraps the standard Prisma Client to enforce Row-Level Security (RLS).
+ */
 export const getTenantDB = (schoolId: string, role: string) => {
   return globalPrisma.$extends({
     query: {
       $allModels: {
-        async $allOperations({ args, query, model, operation }: any) {
-          // 1. Super Admin Bypass (Platform Level)
+        async $allOperations({ args, query, model, operation }) {
+          // Cast args to any to safely access potentially missing properties on union types
+          const safeArgs = args as any;
+
+          // 1. Super Admin Bypass
           if (role === 'SUPER_ADMIN') {
-             return query(args);
-          }
-
-          // 2. RLS Injection
-          // In a real Postgres environment, we wrap this in an interactive transaction
-          // ensuring the config is set ONLY for this operation/transaction scope.
-          
-          /*
-          return globalPrisma.$transaction(async (tx) => {
-            // SET LOCAL ensures the variable dies at the end of transaction
-            await tx.$executeRaw`SELECT set_config('app.current_school_id', ${schoolId}, TRUE)`;
             return query(args);
-          });
-          */
-
-          // 3. Mock Simulation (Console Log for Audit)
-          // console.log(`[RLS] Executing ${operation} on ${model} for School: ${schoolId}`);
-          
-          // Force Inject school_id into WHERE clause for extra safety (Defense in Depth)
-          if (args.where) {
-             args.where.school_id = schoolId;
           }
-          if (args.data) {
-             args.data.school_id = schoolId;
+
+          // 2. RLS Injection: Force Inject school_id into WHERE and DATA
+          if (safeArgs.where) {
+            safeArgs.where.school_id = schoolId;
+          }
+          if (safeArgs.data) {
+            safeArgs.data.school_id = schoolId;
+          }
+
+          if (operation === 'create' || operation === 'createMany') {
+            if (!safeArgs.data) safeArgs.data = {};
+            // checks for array in createMany
+            if (Array.isArray(safeArgs.data)) {
+              safeArgs.data.forEach((item: any) => item.school_id = schoolId);
+            } else {
+              safeArgs.data.school_id = schoolId;
+            }
+          }
+
+          if (
+            operation === 'findUnique' ||
+            operation === 'findFirst' ||
+            operation === 'findMany' ||
+            operation === 'update' ||
+            operation === 'updateMany' ||
+            operation === 'delete' ||
+            operation === 'deleteMany' ||
+            operation === 'count'
+          ) {
+            if (!safeArgs.where) safeArgs.where = {};
+            safeArgs.where.school_id = schoolId;
           }
 
           return query(args);
@@ -92,14 +73,3 @@ export const getTenantDB = (schoolId: string, role: string) => {
     },
   });
 };
-
-/*
-  --- SQL FOR RLS POLICY (Run this in Supabase/Postgres) ---
-  
-  ALTER TABLE "Student" ENABLE ROW LEVEL SECURITY;
-
-  CREATE POLICY "isolate_students_by_school" ON "Student"
-  USING (school_id = current_setting('app.current_school_id')::text);
-
-  -- Repeat for all tables with school_id
-*/

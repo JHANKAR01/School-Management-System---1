@@ -1,7 +1,8 @@
+
 // packages/api/src/services/notification-service.ts
 
 import 'dotenv/config';
-import { initializeApp, getApps, cert } from 'firebase-admin/app'; // Import cert directly from here
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
 
 // Initialize Firebase Admin (Modular Singleton Pattern)

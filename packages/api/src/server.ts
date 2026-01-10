@@ -25,17 +25,18 @@ app.get('/health', (c) => c.json({ status: 'OK', uptime: (process as any).uptime
 // --- MOUNT ROUTERS ---
 
 // 1. PUBLIC ROUTES (No Token Needed)
-app.route('/api/auth', authRouter); // FIXED: Mounts the router, not the middleware
+app.route('/api/auth', authRouter);
 
 // 2. PROTECTED ROUTES (Middleware Guard)
-// This ensures any request to /api/staff, /api/finance, etc., requires a token
-app.use('/api/staff/*', authMiddleware);
-app.use('/api/academics/*', authMiddleware);
-app.use('/api/logistics/*', authMiddleware);
-app.use('/api/finance/*', authMiddleware);
-app.use('/api/health/*', authMiddleware);
-app.use('/api/admissions/*', authMiddleware);
-app.use('/api/operations/*', authMiddleware);
+// Protect "everything else" under /api/ that isn't already handled above (like auth)
+// We use a custom middleware wrapper to skip auth check for paths starting with /api/auth (just in case)
+app.use('/api/*', async (c, next) => {
+  if (c.req.path.startsWith('/api/auth')) {
+    await next();
+  } else {
+    await authMiddleware(c, next);
+  }
+});
 
 app.route('/api/staff', staffRouter);
 app.route('/api/academics', academicsRouter);
