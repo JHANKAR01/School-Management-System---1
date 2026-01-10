@@ -16,6 +16,23 @@ export const PrincipalDashboard: React.FC<{ activeModule: string }> = ({ activeM
     }
   };
 
+  const leaveActions = (leave: any) => (
+    <div className="flex gap-2">
+      <button 
+        className="text-xs font-bold text-green-600 hover:bg-green-50 px-3 py-1.5 rounded border border-green-200 transition-colors"
+        onClick={() => updateLeaveStatus(leave.id, 'APPROVED')}
+      >
+        Approve
+      </button>
+      <button 
+        className="text-xs font-bold text-red-600 hover:bg-red-50 px-3 py-1.5 rounded border border-red-200 transition-colors"
+        onClick={() => updateLeaveStatus(leave.id, 'REJECTED')}
+      >
+        Reject
+      </button>
+    </div>
+  );
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -55,22 +72,7 @@ export const PrincipalDashboard: React.FC<{ activeModule: string }> = ({ activeM
                     { header: 'Reason', accessor: 'reason' },
                     { header: 'Duration', accessor: (row: any) => `${row.startDate} - ${row.endDate}` }
                 ]}
-                actions={(leave) => (
-                    <div className="flex gap-2">
-                        <button 
-                            className="text-xs font-bold text-green-600 hover:bg-green-50 px-3 py-1.5 rounded-lg transition-colors border border-green-200"
-                            onClick={() => updateLeaveStatus(leave.id, 'APPROVED')}
-                        >
-                            Approve
-                        </button>
-                        <button 
-                            className="text-xs font-bold text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-red-200"
-                            onClick={() => updateLeaveStatus(leave.id, 'REJECTED')}
-                        >
-                            Reject
-                        </button>
-                    </div>
-                )}
+                actions={leaveActions}
              />
              {leaves.filter(l => l.status === 'PENDING').length === 0 && (
                  <div className="p-8 text-center text-gray-400">No pending requests.</div>
@@ -84,7 +86,8 @@ export const PrincipalDashboard: React.FC<{ activeModule: string }> = ({ activeM
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         title="School Configuration"
-        footer={<SovereignButton onClick={() => setSettingsOpen(false)}>Save Changes</SovereignButton>}
+        onConfirm={() => setSettingsOpen(false)}
+        confirmLabel="Save Changes"
       >
           <div className="space-y-4">
               <SovereignInput label="School Name" value={config.name} onChange={e => setConfig({...config, name: e.target.value})} />

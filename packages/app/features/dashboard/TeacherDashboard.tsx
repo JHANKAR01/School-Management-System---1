@@ -4,7 +4,7 @@ import { AttendanceModule } from '../../../../components/AttendanceModule';
 import { Gradebook } from '../academics/Gradebook';
 import { LibraryManagement } from '../library/LibraryManagement';
 import { StatCard, PageHeader, SovereignButton, SovereignInput, SovereignBadge, SovereignTable } from '../../components/SovereignComponents';
-import { Users, BookOpen, Clock, AlertCircle, Plus, Video, Calendar, UploadCloud } from 'lucide-react';
+import { Users, BookOpen, Clock, Plus, Video, Calendar, UploadCloud } from 'lucide-react';
 import { useGeofencing } from '../../../../hooks/useGeofencing';
 import { useInteraction } from '../../provider/InteractionContext';
 import { ActionModal } from '../../components/ActionModal';
@@ -16,7 +16,7 @@ interface Props {
 
 export const TeacherDashboard: React.FC<Props> = ({ school, activeModule }) => {
   const { isWithinFence, isMockLocation, loading: geoLoading } = useGeofencing(school.location);
-  const [checkedIn, setCheckedIn] = React.useState(false);
+  const [checkedIn, setCheckedIn] = useState(false);
   
   // Interaction Context
   const { homeworks, addHomework, applyLeave, leaves, liveClasses, toggleLiveClass } = useInteraction();
@@ -50,13 +50,14 @@ export const TeacherDashboard: React.FC<Props> = ({ school, activeModule }) => {
     addHomework(hwForm);
     setHwModalOpen(false);
     setHwForm({ title: '', subject: 'Mathematics', description: '', dueDate: '', classId: '10-A' });
-    // In a real app, use toast here
+    alert("Homework Created Successfully!");
   };
 
   const handleApplyLeave = () => {
     applyLeave(leaveForm as any);
     setLeaveModalOpen(false);
     setLeaveForm({ type: 'SICK', startDate: '', endDate: '', reason: '' });
+    alert("Leave Application Sent.");
   };
 
   const isMathLive = liveClasses['Mathematics'] || false;
@@ -80,18 +81,18 @@ export const TeacherDashboard: React.FC<Props> = ({ school, activeModule }) => {
         <div className="flex items-center gap-2">
             {/* Smart Check-In Widget */}
             <div className="bg-white p-2 rounded-lg border shadow-sm flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${isWithinFence ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-            <div className="text-xs">
-                <p className="font-bold text-gray-700">{geoLoading ? 'Locating...' : (isWithinFence ? 'Inside Campus' : 'Outside Campus')}</p>
-                <p className="text-[10px] text-gray-400">{isMockLocation ? '⚠️ GPS Spoofed' : 'GPS Verified'}</p>
-            </div>
-            <SovereignButton 
-                onClick={handleStaffCheckIn} 
-                disabled={checkedIn || !isWithinFence || isMockLocation}
-                className={`text-xs px-3 py-1.5 h-auto ${checkedIn ? 'bg-green-100 text-green-800 border-green-200' : ''}`}
-            >
-                {checkedIn ? 'On Duty' : 'Staff Check-In'}
-            </SovereignButton>
+              <div className={`w-3 h-3 rounded-full ${isWithinFence ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+              <div className="text-xs">
+                  <p className="font-bold text-gray-700">{geoLoading ? 'Locating...' : (isWithinFence ? 'Inside Campus' : 'Outside Campus')}</p>
+                  <p className="text-[10px] text-gray-400">{isMockLocation ? '⚠️ GPS Spoofed' : 'GPS Verified'}</p>
+              </div>
+              <SovereignButton 
+                  onClick={handleStaffCheckIn} 
+                  disabled={checkedIn || !isWithinFence || isMockLocation}
+                  className={`text-xs px-3 py-1.5 h-auto ${checkedIn ? 'bg-green-100 text-green-800 border-green-200' : ''}`}
+              >
+                  {checkedIn ? 'On Duty' : 'Staff Check-In'}
+              </SovereignButton>
             </div>
         </div>
       </div>
@@ -158,19 +159,13 @@ export const TeacherDashboard: React.FC<Props> = ({ school, activeModule }) => {
         )}
       </div>
 
-      {/* --- MODALS --- */}
-      
       {/* Create Homework Modal */}
       <ActionModal 
         isOpen={isHwModalOpen} 
         onClose={() => setHwModalOpen(false)} 
         title="Create New Assignment"
-        footer={
-           <>
-             <SovereignButton variant="ghost" onClick={() => setHwModalOpen(false)}>Cancel</SovereignButton>
-             <SovereignButton onClick={handleCreateHomework}>Publish</SovereignButton>
-           </>
-        }
+        onConfirm={handleCreateHomework}
+        confirmLabel="Publish"
       >
          <div className="space-y-4">
             <SovereignInput label="Title" value={hwForm.title} onChange={e => setHwForm({...hwForm, title: e.target.value})} placeholder="e.g. Exercise 4.2" />
@@ -194,12 +189,8 @@ export const TeacherDashboard: React.FC<Props> = ({ school, activeModule }) => {
         isOpen={isLeaveModalOpen} 
         onClose={() => setLeaveModalOpen(false)} 
         title="Apply for Leave"
-        footer={
-           <>
-             <SovereignButton variant="ghost" onClick={() => setLeaveModalOpen(false)}>Cancel</SovereignButton>
-             <SovereignButton onClick={handleApplyLeave}>Submit Application</SovereignButton>
-           </>
-        }
+        onConfirm={handleApplyLeave}
+        confirmLabel="Submit Application"
       >
          <div className="space-y-4">
             <div>
