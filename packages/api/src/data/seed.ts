@@ -1,5 +1,5 @@
-import { PrismaClient, UserRole, InvoiceStatus, DocumentStatus } from '@prisma/client';
-import { SOVEREIGN_GENESIS_DATA } from './dummy-data.js';
+import { PrismaClient, UserRole, InvoiceStatus, DocumentStatus, AttendanceStatus } from '@prisma/client';
+import { SOVEREIGN_GENESIS_DATA } from './dummy-data.ts'; // FIXED: Changed .js to .ts
 
 const prisma = new PrismaClient();
 
@@ -131,9 +131,45 @@ async function main() {
         });
       }
     }
+
+    console.log('🏥 Seeding Medical & Counseling Logs');
+    for (const log of SOVEREIGN_GENESIS_DATA.medicalLogs) {
+      const sId = dummyIdToRealIdMap.get(log.student_id);
+      if (sId) {
+        await tx.medicalLog.create({
+          data: {
+            student_id: sId,
+            time: new Date(log.time),
+            issue: log.issue,
+            action: log.action,
+            school_id: SCHOOL_ID
+          }
+        });
+      }
+    }
+
+    for (const session of SOVEREIGN_GENESIS_DATA.counseling) {
+      const sId = dummyIdToRealIdMap.get(session.student_id);
+      if (sId) {
+        await tx.counseling.create({
+          data: {
+            student_id: sId,
+            category: session.category,
+            note: session.note,
+            date: new Date(session.date),
+            school_id: SCHOOL_ID
+          }
+        });
+      }
+    }
   });
 
   console.log('✅ Seed Complete');
 }
 
-main().catch(err => { console.error(err); process.exit(1); }).finally(() => prisma.$disconnect());
+main()
+  .catch(err => { 
+    console.error('❌ Seed failed:', err); 
+    process.exit(1); 
+  })
+  .finally(() => prisma.$disconnect());
