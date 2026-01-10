@@ -1,3 +1,4 @@
+
 // import { PrismaClient } from '@prisma/client';
 
 /**
@@ -6,7 +7,13 @@
  */
 class PrismaClient {
   $extends(args: any) { return this; }
-  async $transaction(args: any) { return args; }
+  async $transaction(args: any) { 
+    // Mock Transaction execution
+    if(Array.isArray(args)) {
+        return Promise.all(args);
+    }
+    return args(this);
+  }
   $executeRaw(query: any, ...args: any[]) { return Promise.resolve(); }
   
   user = {
@@ -28,6 +35,9 @@ class PrismaClient {
     findMany: async (...args: any) => [],
     create: async (...args: any) => ({}),
   };
+  auditLog = {
+    create: async (...args: any) => ({}),
+  }
 }
 
 /**
@@ -47,19 +57,36 @@ export const getTenantDB = (schoolId: string, role: string) => {
   return globalPrisma.$extends({
     query: {
       $allModels: {
-        async $allOperations({ args, query }: any) {
-          // 1. Enforce School ID logic
-          // For Super Admins, we might bypass this, but for now we enforce strict isolation.
+        async $allOperations({ args, query, model, operation }: any) {
+          // 1. Super Admin Bypass (Platform Level)
+          if (role === 'SUPER_ADMIN') {
+             return query(args);
+          }
+
+          // 2. RLS Injection
+          // In a real Postgres environment, we wrap this in an interactive transaction
+          // ensuring the config is set ONLY for this operation/transaction scope.
           
           /*
-          const [, result] = await globalPrisma.$transaction([
-            // Set the RLS variable in Postgres for this transaction block
-            globalPrisma.$executeRaw`SELECT set_config('app.current_school_id', ${schoolId}, TRUE)`,
-            query(args),
-          ]);
-          return result;
+          return globalPrisma.$transaction(async (tx) => {
+            // SET LOCAL ensures the variable dies at the end of transaction
+            await tx.$executeRaw`SELECT set_config('app.current_school_id', ${schoolId}, TRUE)`;
+            return query(args);
+          });
           */
-         return query(args);
+
+          // 3. Mock Simulation (Console Log for Audit)
+          // console.log(`[RLS] Executing ${operation} on ${model} for School: ${schoolId}`);
+          
+          // Force Inject school_id into WHERE clause for extra safety (Defense in Depth)
+          if (args.where) {
+             args.where.school_id = schoolId;
+          }
+          if (args.data) {
+             args.data.school_id = schoolId;
+          }
+
+          return query(args);
         },
       },
     },

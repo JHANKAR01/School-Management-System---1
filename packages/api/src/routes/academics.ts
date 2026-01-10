@@ -5,6 +5,8 @@ import { authMiddleware, requireRole } from '../middleware/auth';
 import { UserRole } from '../../../../types';
 import { generatePDFMarksheet } from '../services/pdf-service';
 import { SOVEREIGN_GENESIS_DATA } from '../data/dummy-data';
+import { notificationQueue } from '../jobs/notification-queue';
+import { AuditLogger } from '../utils/audit-logger';
 
 type Variables = {
   user: {
@@ -20,9 +22,55 @@ academicsRouter.use('*', authMiddleware);
 // --- TEACHER: Marks Entry ---
 academicsRouter.post('/results', requireRole([UserRole.TEACHER, UserRole.PRINCIPAL]), async (c) => {
   const user = c.get('user');
+  const db = getTenantDB(user.school_id, user.role);
   const { examId, studentId, marks } = await c.req.json();
-  // Simulate DB Upsert
+  
+  // Audit the Grade Change
+  await AuditLogger.log(
+      db, 
+      'GRADE_CHANGE', 
+      user, 
+      `Updated marks for ${studentId}`, 
+      'STUDENT', 
+      studentId, 
+      null, // Old Data (Fetch in real DB)
+      marks
+  );
+
   return c.json({ success: true, examId, studentId, marks });
+});
+
+// --- PRINCIPAL: Publish Results (Bulk Broadcast) ---
+academicsRouter.post('/publish-results', requireRole([UserRole.PRINCIPAL]), async (c) => {
+  const user = c.get('user');
+  const db = getTenantDB(user.school_id, user.role);
+  const { examId, studentIds } = await c.req.json();
+
+  console.log(`[Academics] Queueing Results for ${studentIds.length} students...`);
+
+  // Bulk Queueing Strategy
+  for (const stdId of studentIds) {
+    // In real app: fetch parent token/chatId from DB
+    const mockToken = `fcm_token_${stdId}`;
+    
+    await notificationQueue.add({
+      type: 'PUSH',
+      recipient: { id: stdId, token: mockToken },
+      payload: {
+        title: "Exam Results Published",
+        body: `Results for ${examId} are now available. Check the app for details.`,
+        data: { examId, action: 'VIEW_RESULT' }
+      }
+    });
+  }
+
+  await AuditLogger.log(db, 'RESULTS_PUBLISH', user, `Published ${examId} to ${studentIds.length} parents`, 'EXAM', examId);
+
+  return c.json({ 
+    success: true, 
+    message: `Broadcast queued for ${studentIds.length} recipients.`,
+    queueStatus: 'PROCESSING'
+  });
 });
 
 // --- EXAM CELL: Question Paper Inventory ---

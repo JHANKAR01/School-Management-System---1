@@ -4,6 +4,7 @@ import { getTenantDB } from '../db';
 import { authMiddleware, requireRole } from '../middleware/auth';
 import { UserRole } from '../../../../types';
 import { fuzzyMatch, calculateSiblingDiscount } from '../utils/finance-utils';
+import { AuditLogger } from '../utils/audit-logger';
 
 type Variables = {
   user: {
@@ -43,7 +44,7 @@ financeRouter.post('/reconcile', async (c) => {
   return c.json({ results });
 });
 
-// CREATE INVOICE (With Auto-Discount)
+// CREATE INVOICE (With Audit)
 financeRouter.post('/generate-fee', async (c) => {
   const user = c.get('user');
   const db = getTenantDB(user.school_id, user.role);
@@ -53,9 +54,7 @@ financeRouter.post('/generate-fee', async (c) => {
   const discountData = await calculateSiblingDiscount(studentId, baseAmount, db);
   const finalAmount = baseAmount - discountData.amount;
 
-  // 2. Persist Invoice to DB
-  const invoice = await db.invoice.create({
-    data: {
+  const invoiceData = {
       school_id: user.school_id,
       student_id: studentId,
       amount: finalAmount,
@@ -65,8 +64,24 @@ financeRouter.post('/generate-fee', async (c) => {
       description: description || 'Term Fee',
       due_date: dueDate ? new Date(dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Default +30 days
       status: 'PENDING'
-    }
+  };
+
+  // 2. Persist Invoice to DB
+  const invoice: any = await db.invoice.create({
+    data: invoiceData
   });
+
+  // 3. Immutable Audit Log
+  await AuditLogger.log(
+      db, 
+      'INVOICE_GEN', 
+      user, 
+      `Generated Invoice for ${studentId}: ₹${finalAmount}`, 
+      'INVOICE', 
+      invoice.id, 
+      null, 
+      invoiceData
+  );
 
   return c.json({
     success: true,

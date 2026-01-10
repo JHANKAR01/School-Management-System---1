@@ -187,10 +187,14 @@ export interface MedicalLog {
 // --- SECURITY & AUDIT ---
 export interface AuditLog {
   id: string;
+  school_id: string;
   timestamp: string;
-  action: 'FEE_VERIFY' | 'GRADE_CHANGE' | 'SALARY_APPROVE' | 'LIBRARY_FINE' | 'LOGIN' | 'CREATE_STAFF' | 'TERMINATE_STAFF';
-  actorId: string;
-  targetId?: string;
+  action: 'FEE_PAYMENT' | 'INVOICE_GEN' | 'GRADE_CHANGE' | 'LOGIN' | 'CREATE_STAFF' | 'TERMINATE_STAFF' | 'RESULTS_PUBLISH';
+  entity: 'INVOICE' | 'STUDENT' | 'USER' | 'EXAM' | 'SYSTEM';
+  entity_id?: string;
+  actor_id: string;
   details: string;
-  ipHash: string; // Anonymized IP
+  ip_hash: string;
+  old_data?: any; // JSONB
+  new_data?: any; // JSONB
 }

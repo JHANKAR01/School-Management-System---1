@@ -1,15 +1,15 @@
+
 import { Context, Next } from 'hono';
 import { verify } from 'hono/jwt';
 import { UserRole } from '../../../../types';
 
 // Extend Hono Context via Generics or simply cast usage below.
-// Removed module augmentation to prevent resolution errors.
-
 const JWT_SECRET = process.env.JWT_SECRET || 'sovereign_secret_key_123';
 
 /**
  * JWT Authentication Middleware
  * Validates token and extracts user context.
+ * Enforces Tenant Isolation by extracting school_id for RLS.
  */
 export const authMiddleware = async (c: Context, next: Next) => {
   const authHeader = c.req.header('Authorization');
@@ -24,18 +24,19 @@ export const authMiddleware = async (c: Context, next: Next) => {
     const payload = await verify(token, JWT_SECRET);
     
     // Inject into Hono Context
-    c.set('user', {
-      id: payload.sub as string,
-      role: payload.role as UserRole,
-      school_id: payload.school_id as string
-    });
-
-    // Back-fill to request object for compatibility with legacy consumers (like logistics.ts)
-    (c.req as any).user = {
+    const userContext = {
       id: payload.sub as string,
       role: payload.role as UserRole,
       school_id: payload.school_id as string
     };
+
+    c.set('user', userContext);
+    
+    // CRITICAL: Set school_id at root context level for DB RLS Middleware
+    c.set('school_id', payload.school_id);
+
+    // Back-fill to request object for compatibility with legacy consumers (like logistics.ts)
+    (c.req as any).user = userContext;
 
     await next();
   } catch (e) {

@@ -1,3 +1,4 @@
+
 import { Hono } from 'hono';
 import { getTenantDB } from '../db';
 import { authMiddleware, requireRole, getRLSContext } from '../middleware/auth';
@@ -53,7 +54,16 @@ staffRouter.post('/', async (c) => {
     }
   });
 
-  await AuditLogger.log('CREATE_STAFF', user.id, `Created user ${newUser.username} as ${role}`, newUser.id);
+  await AuditLogger.log(
+    db,
+    'CREATE_STAFF',
+    user,
+    `Created user ${newUser.username} as ${role}`,
+    'USER',
+    newUser.id,
+    null,
+    newUser
+  );
   
   return c.json(newUser);
 });
@@ -69,7 +79,14 @@ staffRouter.delete('/:id', async (c) => {
     data: { is_active: false }
   });
 
-  await AuditLogger.log('TERMINATE_STAFF', user.id, `Revoked access for user ${targetId}`, targetId);
+  await AuditLogger.log(
+    db,
+    'TERMINATE_STAFF',
+    user,
+    `Revoked access for user ${targetId}`,
+    'USER',
+    targetId
+  );
   return c.json({ success: true });
 });
 
