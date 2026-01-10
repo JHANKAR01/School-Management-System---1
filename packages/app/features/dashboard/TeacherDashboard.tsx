@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SchoolConfig } from '../../../../types';
 import { AttendanceModule } from '../../../../components/AttendanceModule';

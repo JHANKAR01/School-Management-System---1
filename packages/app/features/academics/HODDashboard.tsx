@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SovereignTable, PageHeader, SovereignBadge, SovereignButton, SovereignInput, StatCard } from '../../components/SovereignComponents';
 import { useInteraction } from '../../provider/InteractionContext';
@@ -15,7 +14,11 @@ export const HODDashboard = () => {
 
   const handleAssignSub = () => {
     // In a real app, this would push to a Substitution Context/DB
-    alert(`Substitution Assigned: ${subForm.replacement} taking ${subForm.class} (Period ${subForm.period})`);
+    if (!subForm.absentTeacher || !subForm.replacement) {
+      alert("Please select both teachers.");
+      return;
+    }
+    alert(`Substitution Assigned: ${subForm.replacement} taking ${subForm.class} (Period ${subForm.period}) in place of ${subForm.absentTeacher}`);
     setSubModalOpen(false);
     setSubForm({ absentTeacher: '', replacement: '', class: '', period: '' });
   };
@@ -58,31 +61,33 @@ export const HODDashboard = () => {
       <div className="flex border-b border-gray-200 mb-6">
         <button 
           onClick={() => setActiveTab('SYLLABUS')} 
-          className={`pb-3 px-4 text-sm font-bold ${activeTab === 'SYLLABUS' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500'}`}
+          className={`pb-3 px-4 text-sm font-bold transition-colors ${activeTab === 'SYLLABUS' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
         >
           Syllabus Review
         </button>
         <button 
           onClick={() => setActiveTab('SUBSTITUTION')} 
-          className={`pb-3 px-4 text-sm font-bold ${activeTab === 'SUBSTITUTION' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500'}`}
+          className={`pb-3 px-4 text-sm font-bold transition-colors ${activeTab === 'SUBSTITUTION' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
         >
           Substitution
         </button>
       </div>
 
       {activeTab === 'SYLLABUS' && (
-        <SovereignTable 
-          data={syllabus} 
-          columns={syllabusColumns} 
-          actions={(row) => row.status !== 'COMPLETED' ? (
-              <button 
-                  onClick={() => approveSyllabus(row.id)}
-                  className="text-xs bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-100 border border-indigo-100 transition-colors"
-              >
-                  Approve Plan
-              </button>
-          ) : <span className="text-xs font-bold text-green-600">✓ Verified</span>}
-        />
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <SovereignTable 
+            data={syllabus} 
+            columns={syllabusColumns} 
+            actions={(row) => row.status !== 'COMPLETED' ? (
+                <button 
+                    onClick={() => approveSyllabus(row.id)}
+                    className="text-xs bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-100 border border-indigo-100 transition-colors"
+                >
+                    Approve Plan
+                </button>
+            ) : <span className="text-xs font-bold text-green-600">✓ Verified</span>}
+            />
+        </div>
       )}
 
       {activeTab === 'SUBSTITUTION' && (
@@ -90,15 +95,17 @@ export const HODDashboard = () => {
            <div className="flex justify-end">
              <SovereignButton onClick={() => setSubModalOpen(true)}>+ Assign Substitute</SovereignButton>
            </div>
-           <SovereignTable
-             data={subData}
-             columns={[
-               { header: "Absent Teacher", accessor: "absent" },
-               { header: "Class", accessor: "class" },
-               { header: "Period", accessor: "period" },
-               { header: "Status", accessor: (row: any) => <SovereignBadge status={row.status === 'ASSIGNED' ? 'success' : 'error'}>{row.status}</SovereignBadge> }
-             ]}
-           />
+           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+               <SovereignTable
+                data={subData}
+                columns={[
+                { header: "Absent Teacher", accessor: "absent" },
+                { header: "Class", accessor: "class" },
+                { header: "Period", accessor: "period" },
+                { header: "Status", accessor: (row: any) => <SovereignBadge status={row.status === 'ASSIGNED' ? 'success' : 'error'}>{row.status}</SovereignBadge> }
+                ]}
+               />
+           </div>
         </div>
       )}
 
