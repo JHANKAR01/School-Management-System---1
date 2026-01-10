@@ -1,19 +1,23 @@
+// packages/api/src/services/notification-service.ts
 
-import * as admin from 'firebase-admin';
+import 'dotenv/config';
+import { initializeApp, getApps, cert } from 'firebase-admin/app'; // Import cert directly from here
+import { getMessaging } from 'firebase-admin/messaging';
 
-// Initialize Firebase Admin (Singleton Pattern)
-if (!admin.apps.length) {
+// Initialize Firebase Admin (Modular Singleton Pattern)
+if (getApps().length === 0) {
   try {
-    // Check if running in a secure environment with keys
+    // Check for credentials in environment variables
     if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
+      initializeApp({
+        credential: cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          // Correctly format the private key string for Node.js
           privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
         }),
       });
-      console.log("[FCM] Firebase Admin Driver Online");
+      console.log("[FCM] Firebase Admin Driver Online (Modular)");
     } else {
       console.warn("[FCM] Credentials missing. Falling back to Simulation Driver.");
     }
@@ -30,17 +34,17 @@ interface NotificationPayload {
 }
 
 export class NotificationService {
-  
+
   static async sendPush(payload: NotificationPayload) {
-    // 1. Simulation Mode (Dev / No Keys)
-    if (!admin.apps.length) {
+    // 1. Simulation Mode (If no apps initialized)
+    if (getApps().length === 0) {
       console.log(`[FCM-SIM] To: ${payload.token.slice(0, 10)}... | ${payload.title} | ${payload.body}`);
       return { success: true, simulated: true };
     }
 
     // 2. Production Mode
     try {
-      const response = await admin.messaging().send({
+      const response = await getMessaging().send({
         token: payload.token,
         notification: {
           title: payload.title,
