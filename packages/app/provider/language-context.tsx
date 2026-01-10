@@ -1,5 +1,7 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { LanguageCode } from '../../../types';
+import { Platform } from 'react-native';
 
 // Embedded Dictionaries to avoid network calls for translations
 const DICTIONARIES: Record<LanguageCode, Record<string, string>> = {
@@ -69,15 +71,19 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Load from local storage on mount (simulated)
   useEffect(() => {
-    const saved = localStorage.getItem('sovereign_lang') as LanguageCode;
-    if (saved && DICTIONARIES[saved]) {
-      setLanguage(saved);
+    if (Platform.OS === 'web') {
+      const saved = localStorage.getItem('sovereign_lang') as LanguageCode;
+      if (saved && DICTIONARIES[saved]) {
+        setLanguage(saved);
+      }
     }
   }, []);
 
   const changeLanguage = (lang: LanguageCode) => {
     setLanguage(lang);
-    localStorage.setItem('sovereign_lang', lang);
+    if (Platform.OS === 'web') {
+      localStorage.setItem('sovereign_lang', lang);
+    }
   };
 
   const t = (key: string) => {

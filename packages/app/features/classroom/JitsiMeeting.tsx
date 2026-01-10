@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { UserRole } from '../../../../types';
-import { Platform, View } from 'react-native';
+import { Platform, View, Text } from 'react-native';
 // Note: In a real environment, @jitsi/react-native-sdk would be imported. 
 // We mock the type here for the shared file logic.
 // import { JitsiMeeting as JitsiNative } from '@jitsi/react-native-sdk';
@@ -39,11 +39,15 @@ export const JitsiMeeting: React.FC<Props> = ({ roomName, userRole, displayName,
     //   />
     // );
     
-    // For this codebase state, we render a placeholder if SDK isn't strictly installed
+    // Placeholder for Native SDK
     return (
-       <View style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
-          {/* @ts-ignore */}
-          <text style={{color: 'white'}}>Starting Native Jitsi Session...</text>
+       <View style={{ flex: 1, backgroundColor: '#111827', alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>
+            Starting Native Jitsi Session...
+          </Text>
+          <Text style={{ color: '#9CA3AF', fontSize: 12, marginTop: 8 }}>
+            Room: {schoolId}-{roomName}
+          </Text>
        </View>
     );
   }

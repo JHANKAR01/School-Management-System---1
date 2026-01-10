@@ -1,4 +1,6 @@
+
 import { useState, useEffect } from 'react';
+import { Platform } from 'react-native';
 
 /**
  * Sovereign Low Data Hook
@@ -8,16 +10,20 @@ export const useLowDataMode = () => {
   const [isLowData, setIsLowData] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('sovereign_low_data');
-    if (saved === 'true') {
-      setIsLowData(true);
+    if (Platform.OS === 'web') {
+      const saved = localStorage.getItem('sovereign_low_data');
+      if (saved === 'true') {
+        setIsLowData(true);
+      }
     }
   }, []);
 
   const toggleLowData = () => {
     setIsLowData(prev => {
       const newState = !prev;
-      localStorage.setItem('sovereign_low_data', String(newState));
+      if (Platform.OS === 'web') {
+        localStorage.setItem('sovereign_low_data', String(newState));
+      }
       return newState;
     });
   };

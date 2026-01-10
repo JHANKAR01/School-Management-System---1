@@ -2,6 +2,7 @@
 import React from 'react';
 import { UserRole, SchoolConfig } from '../types';
 import { useLowDataMode } from '../packages/app/hooks/useLowDataMode';
+import { View, Text, Pressable, ScrollView, Platform, TouchableOpacity, Modal } from 'react-native';
 
 interface SidebarProps {
   role: UserRole;
@@ -29,7 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { isLowData } = useLowDataMode();
   const { features } = school;
   
-  // Comprehensive Menu Logic Mapping to App.tsx Default Modules
+  // Comprehensive Menu Logic
   const getMenuItems = (): MenuItem[] => {
     let items: MenuItem[] = [];
 
@@ -53,7 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       case UserRole.VICE_PRINCIPAL:
         items = [
-            { id: 'TIMETABLES', label: 'Substitutions', icon: '📅' }, // Matches App.tsx default
+            { id: 'TIMETABLES', label: 'Substitutions', icon: '📅' },
             { id: 'SCHEDULES', label: 'Timetables', icon: '🕒' }
         ];
         break;
@@ -147,83 +148,100 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const menuItems = getMenuItems();
 
-  return (
-    <>
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm transition-opacity"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar Container */}
-      <div className={`fixed inset-y-0 left-0 z-30 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:shadow-none border-r border-gray-200 flex flex-col ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+  const SidebarContent = () => (
+    <View className="flex-1 bg-white border-r border-gray-200 h-full">
         {/* Brand Header */}
-        <div className="h-20 flex items-center px-6 relative overflow-hidden" style={{ backgroundColor: school.primary_color }}>
-           {/* Decorative sheen */}
-           <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent pointer-events-none" />
-           
-           <div className="relative z-10 text-white">
-             <h1 className="font-bold text-lg tracking-wide truncate shadow-sm">{school.name}</h1>
-             <p className="text-indigo-100 text-xs font-medium uppercase tracking-wider opacity-90 mt-0.5">
+        <View className="h-20 flex justify-center px-6 relative overflow-hidden" style={{ backgroundColor: school.primary_color }}>
+           <View className="absolute inset-0 bg-black opacity-10" />
+           <View className="relative z-10">
+             <Text className="font-bold text-lg text-white tracking-wide shadow-sm" numberOfLines={1}>
+               {school.name}
+             </Text>
+             <Text className="text-indigo-100 text-xs font-medium uppercase tracking-wider opacity-90 mt-0.5">
                {role.replace('_', ' ')} Portal
-             </p>
-           </div>
-        </div>
+             </Text>
+           </View>
+        </View>
 
         {/* Menu Items */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <ScrollView className="flex-1 p-2">
           {menuItems.map((item) => {
             const isActive = activeModule === item.id;
             return (
-              <button
+              <Pressable
                 key={item.id}
-                onClick={() => {
+                onPress={() => {
                   setActiveModule(item.id);
                   onClose();
                 }}
-                className={`flex w-full items-center px-4 py-3.5 text-sm font-medium rounded-lg transition-all duration-200 group relative overflow-hidden ${
-                  isActive 
-                    ? 'bg-gray-50 text-gray-900 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                className={`flex-row items-center px-4 py-3.5 mb-1 rounded-lg ${
+                  isActive ? 'bg-gray-100' : 'bg-transparent'
                 }`}
               >
-                {/* Active Indicator Line */}
                 {isActive && (
-                  <div 
-                    className="absolute left-0 top-0 bottom-0 w-1" 
+                  <View 
+                    className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 rounded-r"
                     style={{ backgroundColor: school.primary_color }} 
                   />
                 )}
                 
-                <span className={`mr-3 text-lg transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110 text-gray-400'}`}>
-                  {item.icon}
-                </span>
-                <span className="relative z-10">{item.label}</span>
-              </button>
+                <Text className="mr-3 text-lg">{item.icon}</Text>
+                <Text className={`font-medium ${isActive ? 'text-gray-900 font-bold' : 'text-gray-600'}`}>
+                  {item.label}
+                </Text>
+              </Pressable>
             );
           })}
-        </nav>
+        </ScrollView>
 
         {/* User Footer */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50/50">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-gray-600 font-bold shadow-inner">
-               {role[0]}
-             </div>
-             <div className="flex-1 min-w-0">
-               <p className="text-xs font-bold text-gray-900 truncate">Logged In</p>
-               <p className="text-[10px] text-gray-500 truncate capitalize">{role.toLowerCase().replace('_', ' ')}</p>
-             </div>
+        <View className="p-4 border-t border-gray-200 bg-gray-50 flex-row items-center gap-3">
+             <View className="w-10 h-10 rounded-full bg-gray-200 items-center justify-center">
+               <Text className="text-gray-600 font-bold">{role[0]}</Text>
+             </View>
+             <View className="flex-1">
+               <Text className="text-xs font-bold text-gray-900">Logged In</Text>
+               <Text className="text-[10px] text-gray-500 capitalize">{role.toLowerCase().replace('_', ' ')}</Text>
+             </View>
              {isLowData && (
-                <span className="w-2 h-2 rounded-full bg-yellow-400" title="Low Data Mode Active" />
+                <View className="w-2 h-2 rounded-full bg-yellow-400" />
              )}
-          </div>
+        </View>
+    </View>
+  );
+
+  if (Platform.OS === 'web') {
+    // WEB IMPLEMENTATION
+    return (
+      <>
+        {isOpen && (
+          <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={onClose} />
+        )}
+        <div className={`fixed inset-y-0 left-0 z-30 w-72 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:shadow-none border-r border-gray-200 flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+           <SidebarContent />
         </div>
-      </div>
-    </>
+      </>
+    );
+  }
+
+  // MOBILE IMPLEMENTATION (Overlay Modal)
+  return (
+    <View>
+      {/* On Mobile, Sidebar is usually hidden behind a drawer or modal logic */}
+      {isOpen ? (
+        <Modal transparent animationType="fade" visible={isOpen} onRequestClose={onClose}>
+           <View style={{ flex: 1, flexDirection: 'row' }}>
+              <Pressable style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={onClose} />
+              <View style={{ width: '80%', height: '100%', backgroundColor: 'white' }}>
+                 <SidebarContent />
+              </View>
+           </View>
+        </Modal>
+      ) : (
+        <View className="hidden lg:flex w-72 h-full">
+           <SidebarContent />
+        </View>
+      )}
+    </View>
   );
 };

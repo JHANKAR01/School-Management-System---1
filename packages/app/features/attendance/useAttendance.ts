@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLowDataMode } from '../../hooks/useLowDataMode';
 import { Platform } from 'react-native';
 import * as SQLite from 'expo-sqlite';
+import * as Haptics from 'expo-haptics';
 
 // --- OFFLINE STORE ADAPTER (SQLite / LocalStorage) ---
 
@@ -20,7 +21,7 @@ const offlineStore = {
     if (Platform.OS !== 'web' && db) {
        console.log('[SQLite] Saving offline record:', record);
        await db.runAsync('INSERT INTO attendance_queue (payload, timestamp) VALUES (?, ?)', JSON.stringify(record), Date.now());
-    } else {
+    } else if (Platform.OS === 'web') {
        // Web Fallback
        const q = JSON.parse(localStorage.getItem('sovereign_queue') || '[]');
        q.push(record);
@@ -35,12 +36,13 @@ const offlineStore = {
          await db.runAsync('DELETE FROM attendance_queue');
        }
        return rows.map((r: any) => JSON.parse(r.payload));
-    } else {
+    } else if (Platform.OS === 'web') {
        // Web Fallback
        const q = JSON.parse(localStorage.getItem('sovereign_queue') || '[]');
        localStorage.setItem('sovereign_queue', '[]');
        return q;
     }
+    return [];
   }
 };
 
@@ -78,6 +80,11 @@ export const useAttendance = (schoolId: string) => {
       }
     },
     onMutate: async (newAttendance) => {
+      // 0. Native Haptics
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+
       // Optimistic Update
       await queryClient.cancelQueries({ queryKey: ['attendance', schoolId] });
       const previous = queryClient.getQueryData(['attendance', schoolId]);

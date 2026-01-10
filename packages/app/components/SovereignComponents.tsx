@@ -3,90 +3,119 @@ import React from 'react';
 import { getSurface, TYPOGRAPHY, INTERACTIVE, STATUS } from '../theme/design-system';
 import { useLowDataMode } from '../hooks/useLowDataMode';
 import { ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
-import { Platform } from 'react-native';
+import { Platform, View, Text, Pressable, TextInput, PressableProps, TextInputProps, ViewStyle, TextStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
 // --- 1. SOVEREIGN BUTTON ---
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends PressableProps {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   isLoading?: boolean;
   icon?: React.ReactNode;
+  children?: React.ReactNode;
+  onClick?: (e?: any) => void;
+  className?: string; // Kept for NativeWind
 }
 
 export const SovereignButton: React.FC<ButtonProps> = ({ 
-  children, variant = 'primary', className = '', isLoading, icon, style, onClick, ...props 
+  children, variant = 'primary', className = '', isLoading, icon, style, onClick, onPress, disabled, ...props 
 }) => {
   const baseClass = INTERACTIVE.button.base;
   const variantClass = INTERACTIVE.button[variant];
   
-  const finalStyle = variant === 'primary' && !className.includes('bg-') 
-    ? { backgroundColor: 'var(--primary-color)', ...style } 
-    : style;
-
-  const handlePress = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handlePress = (e: any) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
     if (onClick) onClick(e);
+    if (onPress) onPress(e);
   };
 
   return (
-    <button 
-      className={`${baseClass} ${variantClass} ${className} ${isLoading ? 'opacity-75 cursor-not-allowed' : ''}`}
-      style={finalStyle}
-      disabled={isLoading || props.disabled}
-      onClick={handlePress}
+    <Pressable 
+      className={`${baseClass} ${variantClass} ${className} ${isLoading ? 'opacity-75' : ''}`}
+      disabled={isLoading || disabled}
+      onPress={handlePress}
+      style={style as any}
       {...props}
     >
-      {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-      {!isLoading && icon && <span className="mr-2">{icon}</span>}
-      {children}
-    </button>
+      <View className="flex-row items-center justify-center">
+        {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin text-current" />}
+        {!isLoading && icon && <View className="mr-2">{icon}</View>}
+        <Text className={`font-bold ${variant === 'primary' ? 'text-white' : 'text-gray-700'} ${variant === 'danger' ? 'text-red-600' : ''}`}>
+          {children}
+        </Text>
+      </View>
+    </Pressable>
   );
 };
 
-// --- 2. SOVEREIGN INPUT (ACCESSIBILITY ENHANCED) ---
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+// --- 2. SOVEREIGN INPUT (UNIVERSAL) ---
+export interface InputProps extends TextInputProps {
   label?: string;
   icon?: React.ReactNode;
   error?: string;
+  className?: string;
+  // Web Compatibility Props
+  type?: string; 
+  name?: string;
+  onChange?: any; // Looser type to allow Web Events (e.target.value) alongside Native Events
 }
 
 export const SovereignInput: React.FC<InputProps> = ({ label, icon, error, className = '', ...props }) => {
   return (
-    <div className="space-y-1.5 group">
+    <View className="space-y-1.5 w-full">
       {label && (
-        <label className="block text-xs font-extrabold text-slate-600 uppercase tracking-wide group-focus-within:text-indigo-600 transition-colors">
+        <Text className="text-xs font-extrabold text-slate-600 uppercase tracking-wide mb-1">
           {label}
-        </label>
+        </Text>
       )}
-      <div className="relative rounded-lg shadow-sm">
+      <View className="relative rounded-lg shadow-sm flex-row items-center border border-gray-300 bg-white">
         {icon && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500 group-focus-within:text-indigo-600 transition-colors z-10">
+          <View className="pl-3">
             {icon}
-          </div>
+          </View>
         )}
-        <input
-          className={`block w-full rounded-lg border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2.5 shadow-sm transition-colors ${icon ? 'pl-10' : 'pl-3'} font-medium ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''} ${className}`}
+        <TextInput
+          className={`flex-1 p-3 text-gray-900 placeholder:text-gray-400 text-sm font-medium ${className}`}
+          placeholderTextColor="#9CA3AF"
           {...props}
         />
-      </div>
-      {error && <p className="text-xs text-red-600 font-bold">{error}</p>}
-    </div>
+      </View>
+      {error && <Text className="text-xs text-red-600 font-bold mt-1">{error}</Text>}
+    </View>
   );
 };
 
 // --- 3. SOVEREIGN BADGE ---
 interface BadgeProps {
-  status: 'success' | 'warning' | 'error' | 'neutral';
+  status: 'success' | 'warning' | 'error' | 'neutral' | 'info';
   children: React.ReactNode;
 }
 
 export const SovereignBadge: React.FC<BadgeProps> = ({ status, children }) => {
+  // Map simplified status to classes
+  const statusStyles = {
+    success: 'bg-emerald-100 border-emerald-200',
+    warning: 'bg-amber-100 border-amber-200',
+    error: 'bg-rose-100 border-rose-200',
+    neutral: 'bg-slate-100 border-slate-200',
+    info: 'bg-blue-100 border-blue-200'
+  };
+  
+  const textStyles = {
+    success: 'text-emerald-800',
+    warning: 'text-amber-800',
+    error: 'text-rose-800',
+    neutral: 'text-slate-700',
+    info: 'text-blue-800'
+  };
+
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold capitalize ${STATUS[status]}`}>
-      {children}
-    </span>
+    <View className={`px-2.5 py-0.5 rounded-full border self-start ${statusStyles[status] || statusStyles.neutral}`}>
+      <Text className={`text-xs font-bold capitalize ${textStyles[status] || textStyles.neutral}`}>
+        {children}
+      </Text>
+    </View>
   );
 };
 
@@ -103,35 +132,33 @@ export const StatCard: React.FC<StatCardProps> = ({ title, value, trend, icon, s
   const { isLowData } = useLowDataMode();
   
   return (
-    <div className={`${getSurface(isLowData)} rounded-xl p-6 relative overflow-hidden group border border-gray-100`}>
-      {!isLowData && (
-        <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
-      )}
-      
-      <div className="flex justify-between items-start mb-4 relative z-10">
-        <div className="p-2 bg-gray-50 rounded-lg text-gray-600 border border-gray-100 shadow-sm">
+    <View className={`${getSurface(isLowData)} rounded-xl p-6 relative overflow-hidden border border-gray-100 mb-4`}>
+      <View className="flex-row justify-between items-start mb-4 z-10">
+        <View className="p-2 bg-gray-50 rounded-lg border border-gray-100 shadow-sm">
           {icon}
-        </div>
+        </View>
         {trend && (
-          <div className={`flex items-center text-xs font-bold px-2 py-1 rounded-full ${
-            trend.isPositive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+          <View className={`flex-row items-center px-2 py-1 rounded-full ${
+            trend.isPositive ? 'bg-green-50' : 'bg-red-50'
           }`}>
-            {trend.isPositive ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
-            {Math.abs(trend.value)}%
-          </div>
+            {trend.isPositive ? <ArrowUpRight className="w-3 h-3 mr-1 text-green-700" /> : <ArrowDownRight className="w-3 h-3 mr-1 text-red-700" />}
+            <Text className={`text-xs font-bold ${trend.isPositive ? 'text-green-700' : 'text-red-700'}`}>
+              {Math.abs(trend.value)}%
+            </Text>
+          </View>
         )}
-      </div>
+      </View>
       
-      <div className="relative z-10">
-        <h3 className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">{title}</h3>
-        <p className="text-2xl font-black text-gray-900 tracking-tight">{value}</p>
-        {subtitle && <p className="text-xs text-gray-400 mt-1 font-medium">{subtitle}</p>}
-      </div>
-    </div>
+      <View className="z-10">
+        <Text className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">{title}</Text>
+        <Text className="text-2xl font-black text-gray-900 tracking-tight">{value}</Text>
+        {subtitle && <Text className="text-xs text-gray-400 mt-1 font-medium">{subtitle}</Text>}
+      </View>
+    </View>
   );
 };
 
-// --- 5. SOVEREIGN TABLE (HIGH DENSITY) ---
+// --- 5. SOVEREIGN TABLE (UNIVERSAL ADAPTER) ---
 export interface Column<T> {
   header: string;
   accessor: keyof T | ((item: T) => React.ReactNode);
@@ -147,6 +174,32 @@ interface TableProps<T> {
 export function SovereignTable<T extends { id: string | number }>({ data, columns, actions }: TableProps<T>) {
   const { isLowData } = useLowDataMode();
 
+  // Mobile View (List)
+  if (Platform.OS !== 'web') {
+    return (
+      <View className="space-y-3">
+        {data.map((item, idx) => (
+          <View key={item.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+            {columns.map((col, cIdx) => (
+              <View key={cIdx} className="flex-row justify-between mb-2">
+                <Text className="text-xs font-bold text-gray-500 uppercase">{col.header}</Text>
+                <View>
+                  {typeof col.accessor === 'function' ? col.accessor(item) : <Text className="text-sm font-medium text-gray-900">{String(item[col.accessor])}</Text>}
+                </View>
+              </View>
+            ))}
+            {actions && (
+              <View className="mt-2 pt-2 border-t border-gray-100 flex-row justify-end">
+                {actions(item)}
+              </View>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  // Web View (Table)
   return (
     <div className={`${getSurface(isLowData)} rounded-xl overflow-hidden border border-gray-200 shadow-sm`}>
       <div className="overflow-x-auto">
@@ -187,16 +240,16 @@ export function SovereignTable<T extends { id: string | number }>({ data, column
 
 // --- 6. SKELETON LOADER ---
 export const SovereignSkeleton: React.FC<{ className?: string }> = ({ className }) => (
-  <div className={`animate-pulse bg-gray-200 rounded ${className}`} />
+  <View className={`bg-gray-200 rounded animate-pulse ${className}`} />
 );
 
 // --- 7. PAGE HEADER ---
 export const PageHeader: React.FC<{ title: string; subtitle?: string; action?: React.ReactNode }> = ({ title, subtitle, action }) => (
-  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-    <div>
-      <h1 className={TYPOGRAPHY.h1}>{title}</h1>
-      {subtitle && <p className={TYPOGRAPHY.body}>{subtitle}</p>}
-    </div>
-    {action && <div>{action}</div>}
-  </div>
+  <View className="flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <View>
+      <Text className="text-2xl font-bold text-gray-900">{title}</Text>
+      {subtitle && <Text className="text-sm text-gray-600 mt-1">{subtitle}</Text>}
+    </View>
+    {action && <View>{action}</View>}
+  </View>
 );

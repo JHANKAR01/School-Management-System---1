@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { SchoolConfig, User, UserRole, AuthResponse } from '../../../../types';
 import { SovereignButton, SovereignInput } from '../../../../packages/app/components/SovereignComponents';
 import { ShieldCheck, Lock, User as UserIcon, Loader2, Fingerprint } from 'lucide-react';
-import { Platform } from 'react-native';
+import { Platform, View, Text, ScrollView, SafeAreaView, TouchableOpacity, ImageBackground } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 
-// Mock DB of Schools (Keep existing)
+// Mock DB of Schools
 const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
   'demo': {
     school_id: 'sch_123',
@@ -150,86 +150,80 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
     }, 500);
   };
 
-  const handleManualLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    performLogin(username, password);
-  };
-
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-gray-100 font-sans">
-      
-      {/* LEFT PANEL: BRANDING (Hidden on Mobile) */}
-      <div className="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/50 to-slate-900/90 z-10" />
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80')] bg-cover bg-center opacity-20" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
+      <View className="flex-1 h-full w-full flex-row">
         
-        <div className="relative z-20 text-center px-12 max-w-lg">
-           <div className="mb-8 flex justify-center">
-             <div className="w-24 h-24 bg-white/5 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 shadow-2xl">
-                <ShieldCheck className="w-12 h-12 text-emerald-400 drop-shadow-lg" />
-             </div>
-           </div>
-           <h1 className="text-5xl font-black text-white tracking-tight mb-6">
-             PROJECT <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">SOVEREIGN</span>
-           </h1>
-           <p className="text-slate-300 text-lg leading-relaxed font-light">
-             The offline-first, zero-fee ERP designed for the next generation of Indian education.
-           </p>
-        </div>
-      </div>
+        {/* LEFT PANEL: BRANDING (Web Only) */}
+        {Platform.OS === 'web' && (
+          <View className="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden">
+            <View className="relative z-20 items-center px-12 max-w-lg">
+               <View className="mb-8 justify-center">
+                 <View className="w-24 h-24 bg-white/5 rounded-2xl items-center justify-center border border-white/10 shadow-2xl">
+                    <ShieldCheck className="w-12 h-12 text-emerald-400" />
+                 </View>
+               </View>
+               <Text className="text-5xl font-black text-white tracking-tight mb-6">
+                 PROJECT <Text className="text-emerald-400">SOVEREIGN</Text>
+               </Text>
+               <Text className="text-slate-300 text-lg leading-relaxed font-light text-center">
+                 The offline-first, zero-fee ERP designed for the next generation of Indian education.
+               </Text>
+            </View>
+          </View>
+        )}
 
-      {/* RIGHT PANEL: ACTION ZONE */}
-      <div className="w-full lg:w-1/2 flex flex-col h-full bg-slate-50 relative overflow-y-auto">
-         <div className="flex-1 flex flex-col justify-center items-center p-6 lg:p-12">
-            
-            <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Welcome Back</h2>
-                  <p className="text-sm text-gray-500 mt-1 font-medium">Sign in to your sovereign dashboard</p>
-                </div>
+        {/* RIGHT PANEL: ACTION ZONE */}
+        <View className="w-full lg:w-1/2 flex-1 justify-center items-center p-6 lg:p-12 bg-gray-50">
+            <View className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+                <View className="items-center mb-8">
+                  {Platform.OS !== 'web' && <ShieldCheck className="w-10 h-10 text-emerald-600 mb-4" />}
+                  <Text className="text-2xl font-extrabold text-gray-900 tracking-tight">Welcome Back</Text>
+                  <Text className="text-sm text-gray-500 mt-1 font-medium">Sign in to your sovereign dashboard</Text>
+                </View>
 
-                <form className="space-y-6" onSubmit={handleManualLogin}>
+                <View className="space-y-6">
                   <SovereignInput 
                     label="User ID" 
                     placeholder="e.g. demo.principal" 
                     icon={<UserIcon className="w-4 h-4 text-gray-500" />}
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChangeText={setUsername}
                   />
                   <SovereignInput 
                     label="Password" 
-                    type="password"
                     placeholder="••••••••" 
+                    secureTextEntry
                     icon={<Lock className="w-4 h-4 text-gray-500" />}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChangeText={setPassword}
                   />
 
-                  {error && (
-                    <div className="text-red-700 text-xs bg-red-50 p-3 rounded-lg border border-red-200 flex items-center font-bold">
-                      ⚠️ {error}
-                    </div>
-                  )}
+                  {error ? (
+                    <View className="bg-red-50 p-3 rounded-lg border border-red-200">
+                      <Text className="text-red-700 text-xs font-bold">⚠️ {error}</Text>
+                    </View>
+                  ) : null}
 
-                  <SovereignButton type="submit" isLoading={loading} className="w-full py-3 text-base font-bold shadow-lg shadow-indigo-500/20">
+                  <SovereignButton onPress={() => performLogin(username, password)} isLoading={loading} className="w-full py-3 shadow-lg shadow-indigo-500/20">
                     Secure Login
                   </SovereignButton>
 
                   {isBiometricAvailable && savedSession && (
-                    <div className="mt-4 pt-4 border-t border-gray-100 text-center">
-                       <button 
-                         type="button" 
-                         onClick={handleBiometricLogin}
-                         className="flex items-center justify-center gap-2 w-full py-3 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg font-bold transition-colors"
+                    <View className="mt-4 pt-4 border-t border-gray-100 items-center">
+                       <TouchableOpacity 
+                         onPress={handleBiometricLogin}
+                         className="flex-row items-center justify-center gap-2 w-full py-3 bg-indigo-50 rounded-lg"
                        >
-                          <Fingerprint className="w-5 h-5" /> Quick Biometric Login
-                       </button>
-                    </div>
+                          <Fingerprint className="w-5 h-5 text-indigo-700" /> 
+                          <Text className="text-indigo-700 font-bold">Quick Biometric Login</Text>
+                       </TouchableOpacity>
+                    </View>
                   )}
-                </form>
-            </div>
-         </div>
-      </div>
-    </div>
+                </View>
+            </View>
+         </View>
+      </View>
+    </SafeAreaView>
   );
 }
