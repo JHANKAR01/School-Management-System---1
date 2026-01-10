@@ -28,6 +28,7 @@ ios/
 .env.test.local
 .env.production.local
 *.pem
+$env
 
 # Logs
 npm-debug.log*
