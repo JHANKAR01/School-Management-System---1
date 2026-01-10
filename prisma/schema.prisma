@@ -6,10 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-//////////////////////////////////////////////////////
-// ENUMS
-//////////////////////////////////////////////////////
-
 enum UserRole {
   SUPER_ADMIN
   SCHOOL_ADMIN
@@ -32,6 +28,7 @@ enum UserRole {
   SECURITY_HEAD
   ESTATE_MANAGER
   PARENT
+  STUDENT
 }
 
 enum AttendanceStatus {
@@ -52,10 +49,6 @@ enum DocumentStatus {
   REJECTED
 }
 
-//////////////////////////////////////////////////////
-// CORE TENANT
-//////////////////////////////////////////////////////
-
 model School {
   id            String   @id @default(cuid())
   name          String
@@ -66,6 +59,8 @@ model School {
   users    User[]
   students Student[]
   invoices Invoice[]
+  buses    Bus[]
+  books    Book[]
 }
 
 model User {
@@ -113,19 +108,17 @@ model Student {
 }
 
 model ParentStudent {
-  parent_id   String
-  student_id  String
-  school_id   String
-  relation    String
-  is_primary  Boolean @default(false)
+  parent_id  String
+  student_id String
+  school_id  String
+  relation   String
+  is_primary Boolean @default(false)
 
-  parent      User    @relation(fields: [parent_id], references: [id])
-  student     Student @relation(fields: [student_id], references: [id])
+  parent  User    @relation(fields: [parent_id], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [student_id], references: [id], onDelete: Cascade)
 
   @@id([parent_id, student_id])
-  @@index([school_id])
 }
-
 
 model IdentityDocument {
   id                  String         @id @default(cuid())
@@ -153,32 +146,23 @@ model Bus {
   insuranceExpiry DateTime
   school_id       String
 
-  school          School   @relation(fields: [school_id], references: [id])
+  school School @relation(fields: [school_id], references: [id])
 
   @@index([school_id])
 }
-
-
 
 model Book {
-  isbn        String   @id
-  title       String
-  author      String
-  status      String
-  issuedTo    String?
-  school_id   String
+  isbn      String  @id
+  title     String
+  author    String
+  status    String
+  issuedTo  String?
+  school_id String
 
-  school      School   @relation(fields: [school_id], references: [id])
+  school School @relation(fields: [school_id], references: [id])
 
   @@index([school_id])
 }
-
-
-
-
-//////////////////////////////////////////////////////
-// FINANCE
-//////////////////////////////////////////////////////
 
 model Invoice {
   id              String        @id @default(cuid())
@@ -194,17 +178,12 @@ model Invoice {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  student  Student @relation(fields: [student_id], references: [id])
-  school   School? @relation(fields: [schoolId], references: [id])
-  schoolId String?
+  student Student @relation(fields: [student_id], references: [id])
+  school  School  @relation(fields: [school_id], references: [id])
 
   @@index([school_id])
   @@index([student_id])
 }
-
-//////////////////////////////////////////////////////
-// ATTENDANCE
-//////////////////////////////////////////////////////
 
 model Attendance {
   id         String           @id @default(cuid())
@@ -220,10 +199,6 @@ model Attendance {
   @@index([student_id])
 }
 
-//////////////////////////////////////////////////////
-// MEDICAL
-//////////////////////////////////////////////////////
-
 model MedicalLog {
   id         String   @id @default(cuid())
   student_id String
@@ -237,10 +212,6 @@ model MedicalLog {
   @@index([school_id])
   @@index([student_id])
 }
-
-//////////////////////////////////////////////////////
-// COUNSELING
-//////////////////////////////////////////////////////
 
 model Counseling {
   id         String   @id @default(cuid())
