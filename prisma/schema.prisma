@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  
 }
 
 //////////////////////////////////////////////////////
@@ -64,9 +63,9 @@ model School {
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 
-  users         User[]
-  students      Student[]
-  invoices      Invoice[]
+  users    User[]
+  students Student[]
+  invoices Invoice[]
 }
 
 //////////////////////////////////////////////////////
@@ -74,22 +73,22 @@ model School {
 //////////////////////////////////////////////////////
 
 model User {
-  id             String    @id @default(cuid())
-  name           String
-  email          String    @unique
-  phone          String?
-  password_hash  String
-  role           UserRole
-  department     String?
-  school_id      String
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  phone         String?
+  password_hash String
+  role          UserRole
+  department    String?
+  school_id     String
 
-  created_at     DateTime  @default(now())
-  updated_at     DateTime  @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   // RELATIONS
-  school         School            @relation(fields: [school_id], references: [id])
-  parent_links   ParentStudent[]   // only for parents
-  documents      IdentityDocument[]
+  school       School             @relation(fields: [school_id], references: [id])
+  parent_links ParentStudent[] // only for parents
+  documents    IdentityDocument[]
 
   @@index([school_id])
   @@index([role])
@@ -100,24 +99,26 @@ model User {
 //////////////////////////////////////////////////////
 
 model Student {
-  id            String    @id @default(cuid())
-  admission_no  String
-  name          String
-  email         String?   @unique
-  class         String
-  roll          Int
-  school_id     String
+  id           String  @id @default(cuid())
+  admission_no String
+  name         String
+  email        String? @unique
+  class        String
+  roll         Int
+  school_id    String
 
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   // RELATIONS
-  parents       ParentStudent[]
-  documents     IdentityDocument[]
-  invoices      Invoice[]
-  attendance    Attendance[]
-  medical_logs  MedicalLog[]
-  counseling    Counseling[]
+  parents      ParentStudent[]
+  documents    IdentityDocument[]
+  invoices     Invoice[]
+  attendance   Attendance[]
+  medical_logs MedicalLog[]
+  counseling   Counseling[]
+  school       School?            @relation(fields: [schoolId], references: [id])
+  schoolId     String?
 
   @@unique([school_id, admission_no])
   @@index([school_id])
@@ -128,17 +129,17 @@ model Student {
 //////////////////////////////////////////////////////
 
 model ParentStudent {
-  parent_id   String
-  student_id  String
-  school_id   String
-  relation    String    // FATHER | MOTHER | GUARDIAN
-  is_primary  Boolean   @default(false)
+  parent_id  String
+  student_id String
+  school_id  String
+  relation   String // FATHER | MOTHER | GUARDIAN
+  is_primary Boolean @default(false)
 
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  parent      User     @relation(fields: [parent_id], references: [id], onDelete: Cascade)
-  student     Student  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  parent  User    @relation(fields: [parent_id], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [student_id], references: [id], onDelete: Cascade)
 
   @@id([parent_id, student_id])
   @@index([school_id])
@@ -149,20 +150,20 @@ model ParentStudent {
 //////////////////////////////////////////////////////
 
 model IdentityDocument {
-  id                  String          @id @default(cuid())
+  id                  String         @id @default(cuid())
   owner_user_id       String?
   owner_student_id    String?
-  doc_type            String          // AADHAAR | DL | CASTE_CERT | TC
-  file_ref            String          // S3 / MinIO path
+  doc_type            String // AADHAAR | DL | CASTE_CERT | TC
+  file_ref            String // S3 / MinIO path
   masked_id           String?
-  verification_status DocumentStatus  @default(PENDING)
+  verification_status DocumentStatus @default(PENDING)
   school_id           String
 
-  created_at          DateTime        @default(now())
-  updated_at          DateTime        @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  owner_user          User?            @relation(fields: [owner_user_id], references: [id])
-  owner_student       Student?         @relation(fields: [owner_student_id], references: [id])
+  owner_user    User?    @relation(fields: [owner_user_id], references: [id])
+  owner_student Student? @relation(fields: [owner_student_id], references: [id])
 
   @@index([school_id])
   @@index([doc_type])
@@ -183,10 +184,12 @@ model Invoice {
   utr             String?
   school_id       String
 
-  created_at      DateTime      @default(now())
-  updated_at      DateTime      @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  student         Student       @relation(fields: [student_id], references: [id])
+  student  Student @relation(fields: [student_id], references: [id])
+  school   School? @relation(fields: [schoolId], references: [id])
+  schoolId String?
 
   @@index([school_id])
   @@index([student_id])
@@ -204,7 +207,7 @@ model Attendance {
   synced     Boolean          @default(false)
   school_id  String
 
-  student    Student          @relation(fields: [student_id], references: [id])
+  student Student @relation(fields: [student_id], references: [id])
 
   @@index([school_id])
   @@index([student_id])
@@ -222,7 +225,7 @@ model MedicalLog {
   action     String
   school_id  String
 
-  student    Student  @relation(fields: [student_id], references: [id])
+  student Student @relation(fields: [student_id], references: [id])
 
   @@index([school_id])
   @@index([student_id])
@@ -240,7 +243,7 @@ model Counseling {
   date       DateTime
   school_id  String
 
-  student    Student  @relation(fields: [student_id], references: [id])
+  student Student @relation(fields: [student_id], references: [id])
 
   @@index([school_id])
   @@index([student_id])
