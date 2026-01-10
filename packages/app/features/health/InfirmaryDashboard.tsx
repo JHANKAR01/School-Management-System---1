@@ -8,8 +8,8 @@ export const InfirmaryDashboard = () => {
   const { data: logs, isLoading } = useQuery({
     queryKey: ['medical-logs'],
     queryFn: async () => {
-      // const res = await fetch('/api/health/logs', ...);
-      // return res.json();
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 300));
       return SOVEREIGN_GENESIS_DATA.medicalLogs;
     }
   });
@@ -30,7 +30,7 @@ export const InfirmaryDashboard = () => {
           <h2 className="font-bold text-gray-700">Recent Visits</h2>
         </div>
         <div className="divide-y divide-gray-100">
-          {logs?.map((log: any) => (
+          {(logs || []).map((log: any) => (
             <div key={log.id} className="p-4 hover:bg-gray-50">
               <div className="flex justify-between items-start">
                 <div>
@@ -45,6 +45,9 @@ export const InfirmaryDashboard = () => {
               </div>
             </div>
           ))}
+          {(!logs || logs.length === 0) && (
+            <div className="p-4 text-center text-gray-500 text-sm">No medical logs found.</div>
+          )}
         </div>
       </div>
 

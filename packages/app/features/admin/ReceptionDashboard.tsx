@@ -11,15 +11,12 @@ export const ReceptionDashboard = () => {
   const { data: visitors } = useQuery({
     queryKey: ['visitors'],
     queryFn: async () => {
-      // const res = await fetch('/api/operations/visitors', ...);
-      // return res.json();
       return SOVEREIGN_GENESIS_DATA.visitors;
     }
   });
 
   const addMutation = useMutation({
     mutationFn: async (data: any) => {
-      // await fetch('/api/operations/visitors', ...);
       console.log("[DEMO] Visitor Check-in:", data);
     },
     onSuccess: () => {

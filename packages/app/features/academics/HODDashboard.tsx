@@ -8,8 +8,6 @@ export const HODDashboard = () => {
   const { data: syllabus } = useQuery({
     queryKey: ['syllabus'],
     queryFn: async () => {
-      // const res = await fetch('/api/academics/syllabus', ...);
-      // return res.json();
       return SOVEREIGN_GENESIS_DATA.syllabus;
     }
   });

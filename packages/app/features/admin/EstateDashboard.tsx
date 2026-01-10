@@ -9,15 +9,12 @@ export const EstateDashboard = () => {
   const { data: tickets } = useQuery({
     queryKey: ['tickets'],
     queryFn: async () => {
-      // const res = await fetch('/api/operations/tickets', ...);
-      // return res.json();
       return SOVEREIGN_GENESIS_DATA.tickets;
     }
   });
 
   const resolveMutation = useMutation({
     mutationFn: async (id: string) => {
-      // await fetch('/api/operations/tickets/resolve', ...);
       console.log("[DEMO] Resolving Ticket:", id);
     },
     onSuccess: () => alert("Ticket Resolved (Mock)")

@@ -17,8 +17,6 @@ export const CounselorDashboard = () => {
   const { data: notes } = useQuery<CounselorNote[]>({
     queryKey: ['counselor-notes'],
     queryFn: async () => {
-      // const res = await fetch('/api/health/counselor/notes', ...);
-      // return res.json();
       return SOVEREIGN_GENESIS_DATA.counseling;
     }
   });

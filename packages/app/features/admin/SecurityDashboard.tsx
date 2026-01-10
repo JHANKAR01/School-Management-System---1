@@ -9,8 +9,6 @@ export const SecurityDashboard = () => {
   const { data: logs } = useQuery({
     queryKey: ['gate-logs'],
     queryFn: async () => {
-      // const res = await fetch('/api/operations/gate-logs', ...);
-      // return res.json();
       return SOVEREIGN_GENESIS_DATA.gateLogs;
     }
   });
