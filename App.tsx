@@ -62,8 +62,8 @@ const MainLayout: React.FC<{
   }, [user.role]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
-      <View style={{ flex: 1, flexDirection: 'row', height: '100%', backgroundColor: '#F9FAFB', overflow: 'hidden' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F9FAFB', width: '100%', height: '100%' }}>
+      <View style={{ flex: 1, flexDirection: 'row', height: '100%', width: '100%', backgroundColor: '#F9FAFB', overflow: 'hidden' }}>
         {/* Sidebar Navigation */}
         <Sidebar 
           role={user.role} 
@@ -75,9 +75,9 @@ const MainLayout: React.FC<{
         />
 
         {/* Main Content Area */}
-        <View style={{ flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
+        <View style={{ flex: 1, flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
           {/* Top Header */}
-          <View className="bg-white border-b border-gray-200 h-16 flex-row items-center justify-between px-4 lg:px-8 shadow-sm z-10">
+          <View className="bg-white border-b border-gray-200 h-16 flex-row items-center justify-between px-4 lg:px-8 shadow-sm z-10 w-full">
             <View className="flex-row items-center gap-4">
               <TouchableOpacity 
                 onPress={() => setSidebarOpen(true)}
@@ -115,8 +115,8 @@ const MainLayout: React.FC<{
           </View>
 
           {/* Dashboard Switcher */}
-          <View style={{ flex: 1, backgroundColor: '#F9FAFB', position: 'relative' }}>
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={{ flex: 1, backgroundColor: '#F9FAFB', position: 'relative', width: '100%' }}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1, minHeight: '100%' }} style={{ flex: 1 }}>
               {Platform.OS === 'web' ? (
                  <RoleBasedRouter 
                    role={user.role} 
@@ -124,12 +124,6 @@ const MainLayout: React.FC<{
                    activeModule={activeModule} 
                  />
               ) : (
-                 /* 
-                    NOTE: Most RoleBasedRouter sub-components are currently using HTML tags. 
-                    For this React Native upgrade, we are enabling the Sidebar and Frame.
-                    Individual dashboards must be progressively migrated to <View>/<Text>.
-                    We render a placeholder for now to prevent crashes in sub-modules.
-                 */
                  <View className="flex-1 items-center justify-center p-8">
                     <Shield className="w-16 h-16 text-gray-300 mb-4" />
                     <Text className="text-lg font-bold text-gray-600 text-center">
@@ -166,7 +160,7 @@ const App: React.FC = () => {
   if (currentUser?.role === UserRole.SUPER_ADMIN) {
     if (Platform.OS === 'web') {
         return (
-          <div className="relative">
+          <div className="relative h-full w-full">
             <button 
               onClick={handleLogout} 
               className="fixed top-4 right-4 z-50 bg-red-600 text-white px-4 py-2 rounded shadow hover:bg-red-700"

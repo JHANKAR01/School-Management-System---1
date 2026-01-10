@@ -3,9 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { SchoolConfig, User, UserRole, AuthResponse } from '../../../../types';
 import { SovereignButton, SovereignInput } from '../../../../packages/app/components/SovereignComponents';
 import { ShieldCheck, Lock, User as UserIcon, Loader2, Fingerprint } from 'lucide-react';
-import { Platform, View, Text, ScrollView, SafeAreaView, TouchableOpacity, ImageBackground } from 'react-native';
-import * as LocalAuthentication from 'expo-local-authentication';
-import * as SecureStore from 'expo-secure-store';
+import { Platform, View, Text, ScrollView, SafeAreaView, TouchableOpacity } from 'react-native';
 
 // Mock DB of Schools
 const MOCK_SCHOOL_DB: Record<string, SchoolConfig> = {
@@ -65,38 +63,18 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
   const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
   const [savedSession, setSavedSession] = useState<string | null>(null);
 
-  // Check Biometrics Support
+  // Check Biometrics Support (Native Only)
   useEffect(() => {
     if (Platform.OS !== 'web') {
-      (async () => {
-        const compatible = await LocalAuthentication.hasHardwareAsync();
-        const enrolled = await LocalAuthentication.isEnrolledAsync();
-        setIsBiometricAvailable(compatible && enrolled);
-        
-        const session = await SecureStore.getItemAsync('sovereign_user_session');
-        if (session) setSavedSession(session);
-      })();
+      // In a real native build, import and use expo-local-authentication here
+      // For this Universal Web preview, we disable biometrics to avoid crashes
     }
   }, []);
 
   // Biometric Auth Handler
   const handleBiometricLogin = async () => {
     if (!savedSession) return;
-    
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: 'Authenticate to access Sovereign ERP',
-      fallbackLabel: 'Use Passcode'
-    });
-
-    if (result.success) {
-      setLoading(true);
-      setTimeout(() => {
-        const sessionData = JSON.parse(savedSession);
-        // Refresh token logic would go here
-        onLoginSuccess(sessionData);
-        setLoading(false);
-      }, 500);
-    }
+    // Native Logic would go here
   };
 
   const performLogin = async (userStr: string, passStr: string) => {
@@ -140,11 +118,6 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
 
       const authData = { user, school: schoolConfig };
       
-      // Save Session Securely on Native
-      if (Platform.OS !== 'web') {
-        await SecureStore.setItemAsync('sovereign_user_session', JSON.stringify(authData));
-      }
-
       onLoginSuccess(authData);
       setLoading(false);
     }, 500);
@@ -152,11 +125,11 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
-      <View className="flex-1 h-full w-full flex-row">
+      <View style={{ flex: 1, flexDirection: 'row', width: '100%', height: '100%' }}>
         
         {/* LEFT PANEL: BRANDING (Web Only) */}
         {Platform.OS === 'web' && (
-          <View className="hidden lg:flex w-1/2 bg-slate-900 relative items-center justify-center overflow-hidden">
+          <View style={{ display: 'flex', width: '50%', backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center' }} className="hidden lg:flex">
             <View className="relative z-20 items-center px-12 max-w-lg">
                <View className="mb-8 justify-center">
                  <View className="w-24 h-24 bg-white/5 rounded-2xl items-center justify-center border border-white/10 shadow-2xl">
@@ -174,15 +147,15 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
         )}
 
         {/* RIGHT PANEL: ACTION ZONE */}
-        <View className="w-full lg:w-1/2 flex-1 justify-center items-center p-6 lg:p-12 bg-gray-50">
-            <View className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
-                <View className="items-center mb-8">
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: '#F9FAFB' }}>
+            <View style={{ width: '100%', maxWidth: 400, backgroundColor: 'white', padding: 32, borderRadius: 16, shadowOpacity: 0.1, shadowRadius: 10, borderWidth: 1, borderColor: '#E5E7EB' }}>
+                <View style={{ alignItems: 'center', marginBottom: 32 }}>
                   {Platform.OS !== 'web' && <ShieldCheck className="w-10 h-10 text-emerald-600 mb-4" />}
-                  <Text className="text-2xl font-extrabold text-gray-900 tracking-tight">Welcome Back</Text>
-                  <Text className="text-sm text-gray-500 mt-1 font-medium">Sign in to your sovereign dashboard</Text>
+                  <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#111827' }}>Welcome Back</Text>
+                  <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 4 }}>Sign in to your sovereign dashboard</Text>
                 </View>
 
-                <View className="space-y-6">
+                <View style={{ gap: 24 }}>
                   <SovereignInput 
                     label="User ID" 
                     placeholder="e.g. demo.principal" 
@@ -200,23 +173,23 @@ export default function LoginScreen({ onLoginSuccess }: Props) {
                   />
 
                   {error ? (
-                    <View className="bg-red-50 p-3 rounded-lg border border-red-200">
-                      <Text className="text-red-700 text-xs font-bold">⚠️ {error}</Text>
+                    <View style={{ backgroundColor: '#FEF2F2', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#FECACA' }}>
+                      <Text style={{ color: '#B91C1C', fontSize: 12, fontWeight: 'bold' }}>⚠️ {error}</Text>
                     </View>
                   ) : null}
 
-                  <SovereignButton onPress={() => performLogin(username, password)} isLoading={loading} className="w-full py-3 shadow-lg shadow-indigo-500/20">
+                  <SovereignButton onPress={() => performLogin(username, password)} isLoading={loading} style={{ width: '100%', paddingVertical: 12 }}>
                     Secure Login
                   </SovereignButton>
 
                   {isBiometricAvailable && savedSession && (
-                    <View className="mt-4 pt-4 border-t border-gray-100 items-center">
+                    <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F3F4F6', alignItems: 'center' }}>
                        <TouchableOpacity 
                          onPress={handleBiometricLogin}
-                         className="flex-row items-center justify-center gap-2 w-full py-3 bg-indigo-50 rounded-lg"
+                         style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', paddingVertical: 12, backgroundColor: '#EEF2FF', borderRadius: 8 }}
                        >
                           <Fingerprint className="w-5 h-5 text-indigo-700" /> 
-                          <Text className="text-indigo-700 font-bold">Quick Biometric Login</Text>
+                          <Text style={{ color: '#4338CA', fontWeight: 'bold' }}>Quick Biometric Login</Text>
                        </TouchableOpacity>
                     </View>
                   )}

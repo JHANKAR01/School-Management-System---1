@@ -12,32 +12,44 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
+    <style>
+      html, body, #root {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #F9FAFB; /* Match app bg */
+        display: flex;
+        flex-direction: column;
+      }
+      /* React Native Web Reset */
+      * {
+        box-sizing: border-box;
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@^5.90.16",
-    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
-    "papaparse": "https://esm.sh/papaparse@^5.5.3",
-    "@prisma/client": "https://esm.sh/@prisma/client@^7.2.0",
-    "axios": "https://esm.sh/axios@^1.13.2",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react": "https://esm.sh/react@18.2.0",
+    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+    "@tanstack/react-query": "https://esm.sh/@tanstack/react-query@5.17.9",
+    "@google/genai": "https://esm.sh/@google/genai@0.1.1",
+    "papaparse": "https://esm.sh/papaparse@5.4.1",
+    "axios": "https://esm.sh/axios@1.6.5",
+    "lucide-react": "https://esm.sh/lucide-react@0.309.0",
+    "socket.io-client": "https://esm.sh/socket.io-client@4.7.4",
+    "pdf-lib": "https://esm.sh/pdf-lib@1.17.1",
+    "react-native": "https://esm.sh/react-native-web@0.19.10",
+    "buffer": "https://esm.sh/buffer@^6.0.3",
+    "socket.io": "https://esm.sh/socket.io@^4.8.3",
+    "firebase-admin": "https://esm.sh/firebase-admin@^13.6.0",
     "hono/": "https://esm.sh/hono@^4.11.3/",
     "hono": "https://esm.sh/hono@^4.11.3",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "socket.io": "https://esm.sh/socket.io@^4.8.3",
-    "socket.io-client": "https://esm.sh/socket.io-client@^4.8.3",
-    "http": "https://esm.sh/http@^0.0.1-security",
     "@hono/node-server": "https://esm.sh/@hono/node-server@^1.19.8",
-    "firebase-admin": "https://esm.sh/firebase-admin@^13.6.0",
-    "pdf-lib": "https://esm.sh/pdf-lib@^1.17.1",
-    "buffer": "https://esm.sh/buffer@^6.0.3",
-    "react-native": "https://esm.sh/react-native@^0.83.1",
-    "expo-haptics": "https://esm.sh/expo-haptics@^15.0.8",
-    "expo-sqlite": "https://esm.sh/expo-sqlite@^16.0.10",
-    "expo-secure-store": "https://esm.sh/expo-secure-store@^15.0.8",
-    "expo-local-authentication": "https://esm.sh/expo-local-authentication@^17.0.8"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>

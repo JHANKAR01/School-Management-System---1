@@ -4,7 +4,19 @@ import { getSurface, TYPOGRAPHY, INTERACTIVE, STATUS } from '../theme/design-sys
 import { useLowDataMode } from '../hooks/useLowDataMode';
 import { ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
 import { Platform, View, Text, Pressable, TextInput, PressableProps, TextInputProps, ViewStyle, TextStyle } from 'react-native';
-import * as Haptics from 'expo-haptics';
+
+// Safely handle Native Modules
+const safeHaptics = async () => {
+  if (Platform.OS !== 'web') {
+    try {
+      // In a real native build, we would require or import expo-haptics here.
+      // For this Universal setup, we skip direct imports to avoid Web crashes.
+      console.log('Haptic Feedback');
+    } catch (e) {
+      // Ignore missing modules
+    }
+  }
+};
 
 // --- 1. SOVEREIGN BUTTON ---
 export interface ButtonProps extends PressableProps {
@@ -23,9 +35,7 @@ export const SovereignButton: React.FC<ButtonProps> = ({
   const variantClass = INTERACTIVE.button[variant];
   
   const handlePress = (e: any) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    }
+    safeHaptics();
     if (onClick) onClick(e);
     if (onPress) onPress(e);
   };

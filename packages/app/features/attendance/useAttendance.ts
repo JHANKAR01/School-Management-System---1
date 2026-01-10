@@ -2,42 +2,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLowDataMode } from '../../hooks/useLowDataMode';
 import { Platform } from 'react-native';
-import * as SQLite from 'expo-sqlite';
-import * as Haptics from 'expo-haptics';
 
-// --- OFFLINE STORE ADAPTER (SQLite / LocalStorage) ---
-
-let db: any = null;
-if (Platform.OS !== 'web') {
-  // Initialize SQLite on Native
-  try {
-      db = SQLite.openDatabaseSync('sovereign.db');
-      db.execSync('CREATE TABLE IF NOT EXISTS attendance_queue (id INTEGER PRIMARY KEY AUTOINCREMENT, payload TEXT, timestamp INTEGER);');
-  } catch(e) { console.error("SQLite Init Failed", e); }
-}
-
+// --- OFFLINE STORE ADAPTER (LocalStorage for Web / Mock for Native in this shared file) ---
+// In a full monorepo, we would inject the storage provider based on target.
 const offlineStore = {
   async push(record: any) {
-    if (Platform.OS !== 'web' && db) {
-       console.log('[SQLite] Saving offline record:', record);
-       await db.runAsync('INSERT INTO attendance_queue (payload, timestamp) VALUES (?, ?)', JSON.stringify(record), Date.now());
-    } else if (Platform.OS === 'web') {
-       // Web Fallback
+    if (Platform.OS === 'web') {
        const q = JSON.parse(localStorage.getItem('sovereign_queue') || '[]');
        q.push(record);
        localStorage.setItem('sovereign_queue', JSON.stringify(q));
+    } else {
+       console.log('[Native] Queued offline record (Mock)', record);
     }
   },
   
   async popAll() {
-    if (Platform.OS !== 'web' && db) {
-       const rows = await db.getAllAsync('SELECT * FROM attendance_queue');
-       if (rows.length > 0) {
-         await db.runAsync('DELETE FROM attendance_queue');
-       }
-       return rows.map((r: any) => JSON.parse(r.payload));
-    } else if (Platform.OS === 'web') {
-       // Web Fallback
+    if (Platform.OS === 'web') {
        const q = JSON.parse(localStorage.getItem('sovereign_queue') || '[]');
        localStorage.setItem('sovereign_queue', '[]');
        return q;
@@ -53,9 +33,7 @@ export const useAttendance = (schoolId: string) => {
   const mutation = useMutation({
     mutationFn: async (vars: { studentId: string; status: 'PRESENT' | 'ABSENT'; date: string }) => {
       try {
-        // 1. Check connectivity or user preference
-        // On Native, we might use NetInfo, but here we stick to navigator.onLine for web
-        // For Native, we assume online unless specified otherwise, or let the fetch fail
+        // 1. Check connectivity
         if (isLowData || (Platform.OS === 'web' && !navigator.onLine)) {
            throw new Error("FORCE_OFFLINE");
         }
@@ -74,17 +52,12 @@ export const useAttendance = (schoolId: string) => {
         return await response.json();
 
       } catch (error) {
-        // 3. Fallback to SQLite/LocalStorage
+        // 3. Fallback to Offline Store
         await offlineStore.push({ ...vars, schoolId, timestamp: Date.now() });
         return { success: true, offline: true };
       }
     },
     onMutate: async (newAttendance) => {
-      // 0. Native Haptics
-      if (Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      }
-
       // Optimistic Update
       await queryClient.cancelQueries({ queryKey: ['attendance', schoolId] });
       const previous = queryClient.getQueryData(['attendance', schoolId]);
