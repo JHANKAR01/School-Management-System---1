@@ -4,7 +4,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  
 }
+
+//////////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////////
 
 enum UserRole {
   SUPER_ADMIN
@@ -12,6 +17,8 @@ enum UserRole {
   PRINCIPAL
   VICE_PRINCIPAL
   HOD
+  TEACHER
+  ACCOUNTANT
   FINANCE_MANAGER
   FLEET_MANAGER
   ADMISSIONS_OFFICER
@@ -19,74 +26,13 @@ enum UserRole {
   LIBRARIAN
   WARDEN
   NURSE
+  COUNSELOR
   INVENTORY_MANAGER
   RECEPTIONIST
   IT_ADMIN
   SECURITY_HEAD
   ESTATE_MANAGER
-  COUNSELOR
-  TEACHER
-  ACCOUNTANT
   PARENT
-  STUDENT
-}
-
-model User {
-  id         String   @id @default(cuid())
-  name       String
-  role       UserRole
-  school_id  String
-  department String?
-  
-  @@index([school_id])
-}
-
-model Student {
-  id           String   @id @default(cuid())
-  name         String
-  class        String
-  roll         Int
-  parent_phone String
-  school_id    String
-  invoices     Invoice[]
-  attendance   Attendance[]
-  
-  @@index([school_id])
-}
-
-model Invoice {
-  id              String        @id @default(cuid())
-  student_id      String
-  student         Student       @relation(fields: [student_id], references: [id])
-  amount          Float
-  base_amount     Float
-  discount_amount Float
-  discount_reason String?
-  description     String
-  due_date        DateTime
-  status          InvoiceStatus @default(PENDING)
-  utr             String?
-  school_id       String
-
-  @@index([school_id])
-}
-
-enum InvoiceStatus {
-  PENDING
-  VERIFIED
-  PAID
-}
-
-model Attendance {
-  id         String           @id @default(cuid())
-  student_id String
-  student    Student          @relation(fields: [student_id], references: [id])
-  date       DateTime
-  status     AttendanceStatus
-  synced     Boolean          @default(false)
-  school_id  String
-
-  @@index([school_id])
 }
 
 enum AttendanceStatus {
@@ -95,44 +41,200 @@ enum AttendanceStatus {
   LATE
 }
 
-model Book {
-  isbn     String     @id
-  title    String
-  author   String
-  status   BookStatus @default(AVAILABLE)
-  dueDate  DateTime?
-  issuedTo String?
+enum InvoiceStatus {
+  PENDING
+  VERIFIED
+  PAID
 }
 
-enum BookStatus {
-  AVAILABLE
-  ISSUED
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
 }
 
-model Bus {
-  id              String   @id @default(cuid())
-  plateNumber     String
-  driverName      String
-  capacity        Int
-  routeId         String
-  insuranceExpiry DateTime
+//////////////////////////////////////////////////////
+// CORE TENANT
+//////////////////////////////////////////////////////
+
+model School {
+  id            String   @id @default(cuid())
+  name          String
+  settings_json Json?
+  created_at    DateTime @default(now())
+
+  users         User[]
+  students      Student[]
+  invoices      Invoice[]
+}
+
+//////////////////////////////////////////////////////
+// USERS (STAFF + PARENTS)
+//////////////////////////////////////////////////////
+
+model User {
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  phone          String?
+  password_hash  String
+  role           UserRole
+  department     String?
+  school_id      String
+
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+
+  // RELATIONS
+  school         School            @relation(fields: [school_id], references: [id])
+  parent_links   ParentStudent[]   // only for parents
+  documents      IdentityDocument[]
+
+  @@index([school_id])
+  @@index([role])
+}
+
+//////////////////////////////////////////////////////
+// STUDENTS
+//////////////////////////////////////////////////////
+
+model Student {
+  id            String    @id @default(cuid())
+  admission_no  String
+  name          String
+  email         String?
+  class         String
+  roll          Int
+  school_id     String
+
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  // RELATIONS
+  parents       ParentStudent[]
+  documents     IdentityDocument[]
+  invoices      Invoice[]
+  attendance    Attendance[]
+  medical_logs  MedicalLog[]
+  counseling    Counseling[]
+
+  @@unique([school_id, admission_no])
+  @@index([school_id])
+  @@index([email])
+}
+
+//////////////////////////////////////////////////////
+// PARENT ↔ STUDENT (EXPLICIT JOIN)
+//////////////////////////////////////////////////////
+
+model ParentStudent {
+  parent_id   String
+  student_id  String
+  school_id   String
+  relation    String    // FATHER | MOTHER | GUARDIAN
+  is_primary  Boolean   @default(false)
+
+  parent      User     @relation(fields: [parent_id], references: [id], onDelete: Cascade)
+  student     Student  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+
+  @@id([parent_id, student_id])
+  @@index([school_id])
+}
+
+//////////////////////////////////////////////////////
+// DOCUMENTS (METADATA ONLY)
+//////////////////////////////////////////////////////
+
+model IdentityDocument {
+  id                  String          @id @default(cuid())
+  owner_user_id       String?
+  owner_student_id    String?
+  doc_type            String          // AADHAAR | DL | CASTE_CERT | TC
+  file_ref            String          // S3 / MinIO path
+  masked_id           String?
+  verification_status DocumentStatus  @default(PENDING)
+  school_id           String
+
+  created_at          DateTime        @default(now())
+
+  owner_user          User?            @relation(fields: [owner_user_id], references: [id])
+  owner_student       Student?         @relation(fields: [owner_student_id], references: [id])
+
+  @@index([school_id])
+  @@index([doc_type])
+}
+
+//////////////////////////////////////////////////////
+// FINANCE
+//////////////////////////////////////////////////////
+
+model Invoice {
+  id              String        @id @default(cuid())
+  student_id      String
+  base_amount     Float
+  discount_amount Float
+  description     String
+  due_date        DateTime
+  status          InvoiceStatus @default(PENDING)
+  utr             String?
   school_id       String
 
+  student         Student       @relation(fields: [student_id], references: [id])
+
   @@index([school_id])
+  @@index([student_id])
 }
 
-model AuditLog {
-  id         String      @id @default(cuid())
+//////////////////////////////////////////////////////
+// ATTENDANCE
+//////////////////////////////////////////////////////
+
+model Attendance {
+  id         String           @id @default(cuid())
+  student_id String
+  date       DateTime
+  status     AttendanceStatus
+  synced     Boolean          @default(false)
   school_id  String
-  timestamp  DateTime    @default(now())
-  action     String
-  entity     String
-  entity_id  String?
-  actor_id   String
-  details    String
-  ip_hash    String
-  old_data   Json?
-  new_data   Json?
+
+  student    Student          @relation(fields: [student_id], references: [id])
 
   @@index([school_id])
+  @@index([student_id])
+}
+
+//////////////////////////////////////////////////////
+// MEDICAL
+//////////////////////////////////////////////////////
+
+model MedicalLog {
+  id         String   @id @default(cuid())
+  student_id String
+  time       DateTime
+  issue      String
+  action     String
+  school_id  String
+
+  student    Student  @relation(fields: [student_id], references: [id])
+
+  @@index([school_id])
+  @@index([student_id])
+}
+
+//////////////////////////////////////////////////////
+// COUNSELING
+//////////////////////////////////////////////////////
+
+model Counseling {
+  id         String   @id @default(cuid())
+  student_id String
+  category   String
+  note       String
+  date       DateTime
+  school_id  String
+
+  student    Student  @relation(fields: [student_id], references: [id])
+
+  @@index([school_id])
+  @@index([student_id])
 }
